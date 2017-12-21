@@ -28,170 +28,237 @@
 <body>
 
 
-<div class="menu">
-    <div class="container-fluid">
-		<div class="navbar-header" style="color:white">
-		<span class="glyphicon glyphicon-user"></span> <span
+	<div class="menu">
+		<div class="container-fluid">
+			<div class="navbar-header" style="color: white">
+				<span class="glyphicon glyphicon-user"></span> <span
 					th:text="'Welcome: ' + ${username}"></span>
-		</div>
-		<div>
-			<ul class="nav navbar-nav navbar-right">
-				<li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Sign Out</a></li>
-			</ul>
+			</div>
+			<div>
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="#"><span class="glyphicon glyphicon-log-in"></span>
+							Sign Out</a></li>
+				</ul>
+			</div>
 		</div>
 	</div>
-</div>
 
-SHAIK UMMER FARUK
-
-HIU<span th:text="${table}"></span>
-
+	SHAIK UMMER FARUK
 
 	<div class="span7">
 		<div class="widget stacked widget-table action-table">
 
-				<div class="container"><br/><br/>
-					<span>Jira Summary :</span>
-					<div class="row">
-						<div class="">
-							<div class="panel panel-success">
-								<div class="panel-heading">
-									<h3 class="panel-title">Tasks</h3>
-									<div class="pull-right">
-										<span class="clickable filter" data-toggle="tooltip"
-											title="Toggle table filter" data-container="body"> <i
-											class="glyphicon glyphicon-filter"></i>
-										</span>
-									</div>
+			<div class="container" style="margin-left: 38px; padding:0; width: 1265px">
+				<br /> <br /> <span>Jira Summary :</span>
+				<div class="row">
+					<div class="">
+						<div class="panel panel-success">
+							<div class="panel-heading">
+								<h3 class="panel-title">Tasks</h3>
+								<div class="pull-right">
+									<span class="clickable filter" data-toggle="tooltip"
+										title="Toggle table filter" data-container="body"> <i
+										class="glyphicon glyphicon-filter"></i>
+									</span>
 								</div>
-								<div class="panel-body">
-									<input type="text" class="form-control" id="task-table-filter"
-										data-action="filter" data-filters="#task-table"
-										placeholder="Filter Tasks" />
-								</div>
-								<table class="table table-hover" id="task-table">
-									<thead>
-										<tr>
-											<th>#</th>
-											<th>Task</th>
-											<th>Assignee</th>
-											<th>Status</th>
-										</tr>
-									</thead>
-									<tbody>
-										<tr>
-											<td>1</td>
-											<td>Site Wireframes</td>
-											<td>John Smith</td>
-											<td>in progress</td>
-										</tr>
-										<tr>
-											<td>2</td>
-											<td>Mobile Landing Page</td>
-											<td>Kilgore Trout</td>
-											<td>completed</td>
-										</tr>
-										<tr>
-											<td>3</td>
-											<td>Add SEO tags</td>
-											<td>Bob Loblaw</td>
-											<td>failed qa</td>
-										</tr>
-										<tr>
-											<td>4</td>
-											<td>Migrate to Bootstrap 3</td>
-											<td>Emily Hoenikker</td>
-											<td>in progress</td>
-										</tr>
-										<tr>
-											<td>5</td>
-											<td>Update jQuery library</td>
-											<td>Holden Caulfield</td>
-											<td>deployed</td>
-										</tr>
-										<tr>
-											<td>6</td>
-											<td>Issues in IE7</td>
-											<td>Jane Doe</td>
-											<td>failed qa</td>
-										</tr>
-										<tr>
-											<td>7</td>
-											<td>Bugs from Sprint 14</td>
-											<td>Kilgore Trout</td>
-											<td>completed</td>
-										</tr>
-									</tbody>
-								</table>
 							</div>
+							<div class="panel-body">
+								<input type="text" class="form-control" id="task-table-filter"
+									data-action="filter" data-filters="#task-table"
+									placeholder="Filter Tasks" />
+							</div>
+
+
+							<table class="table table-hover" id="task-table" >
+								<thead style="font-size: 15px;">
+									<tr>
+										<th>Issue #</th>
+<!-- 										<th>Resolution</th> -->
+										<th>Assignee</th>
+										<th>Reporter</th>
+										<th>Status</th>
+<!-- 										<th>description</th> -->
+										<th>Created</th>
+										<th>Updated</th>
+										<th>Estimated</th>
+										<th>Remaining</th>
+										<th>Logged</th>
+<!-- 										<th>sprint</th> -->
+<!-- 										<th>components</th> -->
+<!-- 										<th>labels</th> -->
+										<th>Priority</th>
+<!-- 										<th>type</th> -->
+									</tr>
+								</thead>
+								<tbody style="font-size: 13px;">
+									<tr th:each="jira : ${table}">
+										<td th:text="${jira.ticketNumber}">Issue #</td>
+										
+<!-- 										<td th:text="${jira.resolution}">Resolution</td> -->
+										<td th:text="${jira.assignee}">Assignee</td>
+										<td th:text="${jira.reporter}">Reporter</td>
+										<td th:text="${jira.status}">Status</td>
+<!-- 										<td th:text="${jira.description}">description</td> -->
+										<td th:text="${jira.created}">Created</td>
+										<td th:text="${jira.updated}">Updated</td>
+										<td th:text="${jira.estimated}">Estimated</td>
+										<td th:text="${jira.remaining}">Remaining</td>
+										<td th:text="${jira.logged}">Logged</td>
+<!-- 										<td th:text="${jira.sprint}">sprint</td> -->
+<!-- 										<td th:text="${jira.components}">components</td> -->
+<!-- 										<td th:text="${jira.labels}">labels</td> -->
+										<td th:text="${jira.priority}">Priority</td>
+<!-- 										<td th:text="${jira.type}">type</td> -->
+									</tr>
+								</tbody>
+							</table>
+<!-- 							<table class="table table-hover" id="task-table"> -->
+<!-- 								<thead> -->
+<!-- 									<tr> -->
+<!-- 										<th>#</th> -->
+<!-- 										<th>Task</th> -->
+<!-- 										<th>Assignee</th> -->
+<!-- 										<th>Status</th> -->
+<!-- 									</tr> -->
+<!-- 								</thead> -->
+<!-- 								<tbody> -->
+<!-- 									<tr> -->
+<!-- 										<td>1</td> -->
+<!-- 										<td>Site Wireframes</td> -->
+<!-- 										<td>John Smith</td> -->
+<!-- 										<td>in progress</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>2</td> -->
+<!-- 										<td>Mobile Landing Page</td> -->
+<!-- 										<td>Kilgore Trout</td> -->
+<!-- 										<td>completed</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>3</td> -->
+<!-- 										<td>Add SEO tags</td> -->
+<!-- 										<td>Bob Loblaw</td> -->
+<!-- 										<td>failed qa</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>4</td> -->
+<!-- 										<td>Migrate to Bootstrap 3</td> -->
+<!-- 										<td>Emily Hoenikker</td> -->
+<!-- 										<td>in progress</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>5</td> -->
+<!-- 										<td>Update jQuery library</td> -->
+<!-- 										<td>Holden Caulfield</td> -->
+<!-- 										<td>deployed</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>6</td> -->
+<!-- 										<td>Issues in IE7</td> -->
+<!-- 										<td>Jane Doe</td> -->
+<!-- 										<td>failed qa</td> -->
+<!-- 									</tr> -->
+<!-- 									<tr> -->
+<!-- 										<td>7</td> -->
+<!-- 										<td>Bugs from Sprint 14</td> -->
+<!-- 										<td>Kilgore Trout</td> -->
+<!-- 										<td>completed</td> -->
+<!-- 									</tr> -->
+<!-- 								</tbody> -->
+<!-- 							</table> -->
 						</div>
 					</div>
 				</div>
-
 			</div>
 
 		</div>
+
+	</div>
 </body>
 
 <script type="text/javascript">
-  
-  
-  /**
-  *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
-  *		$(input-element).filterTable()
-  *		
-  *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
-  */
-  (function(){
-      'use strict';
-  	var $ = jQuery;
-  	$.fn.extend({
-  		filterTable: function(){
-  			return this.each(function(){
-  				$(this).on('keyup', function(e){
-  					$('.filterTable_no_results').remove();
-  					var $this = $(this), 
-                          search = $this.val().toLowerCase(), 
-                          target = $this.attr('data-filters'), 
-                          $target = $(target), 
-                          $rows = $target.find('tbody tr');
-                          
-  					if(search == '') {
-  						$rows.show(); 
-  					} else {
-  						$rows.each(function(){
-  							var $this = $(this);
-  							$this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
-  						})
-  						if($target.find('tbody tr:visible').size() === 0) {
-  							var col_count = $target.find('tr').first().find('td').size();
-  							var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
-  							$target.find('tbody').append(no_results);
-  						}
-  					}
-  				});
-  			});
-  		}
-  	});
-  	$('[data-action="filter"]').filterTable();
-  })(jQuery);
+	/**
+	 *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
+	 *		$(input-element).filterTable()
+	 *		
+	 *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
+	 */
+	(function() {
+		'use strict';
+		var $ = jQuery;
+		$.fn
+				.extend({
+					filterTable : function() {
+						return this
+								.each(function() {
+									$(this)
+											.on(
+													'keyup',
+													function(e) {
+														$(
+																'.filterTable_no_results')
+																.remove();
+														var $this = $(this), search = $this
+																.val()
+																.toLowerCase(), target = $this
+																.attr('data-filters'), $target = $(target), $rows = $target
+																.find('tbody tr');
 
-  $(function(){
-      // attach table filter plugin to inputs
-  	$('[data-action="filter"]').filterTable();
-  	
-  	$('.container').on('click', '.panel-heading span.filter', function(e){
-  		var $this = $(this), 
-  			$panel = $this.parents('.panel');
-  		
-  		$panel.find('.panel-body').slideToggle();
-  		if($this.css('display') != 'none') {
-  			$panel.find('.panel-body input').focus();
-  		}
-  	});
-//   	$('[data-toggle="tooltip"]').tooltip();
-  })
-  
-  </script>
+														if (search == '') {
+															$rows.show();
+														} else {
+															$rows
+																	.each(function() {
+																		var $this = $(this);
+																		$this
+																				.text()
+																				.toLowerCase()
+																				.indexOf(
+																						search) === -1 ? $this
+																				.hide()
+																				: $this
+																						.show();
+																	})
+															if ($target
+																	.find(
+																			'tbody tr:visible')
+																	.size() === 0) {
+																var col_count = $target
+																		.find(
+																				'tr')
+																		.first()
+																		.find(
+																				'td')
+																		.size();
+																var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
+																$target
+																		.find(
+																				'tbody')
+																		.append(
+																				no_results);
+															}
+														}
+													});
+								});
+					}
+				});
+		$('[data-action="filter"]').filterTable();
+	})(jQuery);
+
+	$(function() {
+		// attach table filter plugin to inputs
+		$('[data-action="filter"]').filterTable();
+
+		$('.container').on('click', '.panel-heading span.filter', function(e) {
+			var $this = $(this), $panel = $this.parents('.panel');
+
+			$panel.find('.panel-body').slideToggle();
+			if ($this.css('display') != 'none') {
+				$panel.find('.panel-body input').focus();
+			}
+		});
+		//   	$('[data-toggle="tooltip"]').tooltip();
+	})
+</script>
 
 </html>
