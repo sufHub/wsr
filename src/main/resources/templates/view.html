@@ -1,0 +1,195 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+<meta name="description" content="" />
+<meta name="author" content="" />
+<link rel="icon" href="../../favicon.ico" />
+
+<title>Jira Details</title>
+
+<!-- Bootstrap core CSS -->
+
+
+<link href="css/bootstrap.min.css" rel="stylesheet" />
+<!-- Custom styles for this template -->
+<link href="css/dashboard.css" rel="stylesheet" />
+
+
+<link href="css/jquery.dataTables.min.css" rel="stylesheet" />
+<script src="js/jquery-1.12.4.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+
+
+</head>
+
+<body>
+
+
+<div class="menu">
+    <div class="container-fluid">
+		<div class="navbar-header" style="color:white">
+		<span class="glyphicon glyphicon-user"></span> <span
+					th:text="'Welcome: ' + ${username}"></span>
+		</div>
+		<div>
+			<ul class="nav navbar-nav navbar-right">
+				<li><a href="#"><span class="glyphicon glyphicon-log-in"></span> Sign Out</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+
+HIU<span th:text="${table}"></span>
+
+
+	<div class="span7">
+		<div class="widget stacked widget-table action-table">
+
+				<div class="container"><br/><br/>
+					<span>Jira Summary :</span>
+					<div class="row">
+						<div class="">
+							<div class="panel panel-success">
+								<div class="panel-heading">
+									<h3 class="panel-title">Tasks</h3>
+									<div class="pull-right">
+										<span class="clickable filter" data-toggle="tooltip"
+											title="Toggle table filter" data-container="body"> <i
+											class="glyphicon glyphicon-filter"></i>
+										</span>
+									</div>
+								</div>
+								<div class="panel-body">
+									<input type="text" class="form-control" id="task-table-filter"
+										data-action="filter" data-filters="#task-table"
+										placeholder="Filter Tasks" />
+								</div>
+								<table class="table table-hover" id="task-table">
+									<thead>
+										<tr>
+											<th>#</th>
+											<th>Task</th>
+											<th>Assignee</th>
+											<th>Status</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td>1</td>
+											<td>Site Wireframes</td>
+											<td>John Smith</td>
+											<td>in progress</td>
+										</tr>
+										<tr>
+											<td>2</td>
+											<td>Mobile Landing Page</td>
+											<td>Kilgore Trout</td>
+											<td>completed</td>
+										</tr>
+										<tr>
+											<td>3</td>
+											<td>Add SEO tags</td>
+											<td>Bob Loblaw</td>
+											<td>failed qa</td>
+										</tr>
+										<tr>
+											<td>4</td>
+											<td>Migrate to Bootstrap 3</td>
+											<td>Emily Hoenikker</td>
+											<td>in progress</td>
+										</tr>
+										<tr>
+											<td>5</td>
+											<td>Update jQuery library</td>
+											<td>Holden Caulfield</td>
+											<td>deployed</td>
+										</tr>
+										<tr>
+											<td>6</td>
+											<td>Issues in IE7</td>
+											<td>Jane Doe</td>
+											<td>failed qa</td>
+										</tr>
+										<tr>
+											<td>7</td>
+											<td>Bugs from Sprint 14</td>
+											<td>Kilgore Trout</td>
+											<td>completed</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+</body>
+
+<script type="text/javascript">
+  
+  
+  /**
+  *		<input type="text" class="form-control" id="dev-table-filter" data-action="filter" data-filters="#dev-table" placeholder="Filter Developers" />
+  *		$(input-element).filterTable()
+  *		
+  *	The important attributes are 'data-action="filter"' and 'data-filters="#table-selector"'
+  */
+  (function(){
+      'use strict';
+  	var $ = jQuery;
+  	$.fn.extend({
+  		filterTable: function(){
+  			return this.each(function(){
+  				$(this).on('keyup', function(e){
+  					$('.filterTable_no_results').remove();
+  					var $this = $(this), 
+                          search = $this.val().toLowerCase(), 
+                          target = $this.attr('data-filters'), 
+                          $target = $(target), 
+                          $rows = $target.find('tbody tr');
+                          
+  					if(search == '') {
+  						$rows.show(); 
+  					} else {
+  						$rows.each(function(){
+  							var $this = $(this);
+  							$this.text().toLowerCase().indexOf(search) === -1 ? $this.hide() : $this.show();
+  						})
+  						if($target.find('tbody tr:visible').size() === 0) {
+  							var col_count = $target.find('tr').first().find('td').size();
+  							var no_results = $('<tr class="filterTable_no_results"><td colspan="'+col_count+'">No results found</td></tr>')
+  							$target.find('tbody').append(no_results);
+  						}
+  					}
+  				});
+  			});
+  		}
+  	});
+  	$('[data-action="filter"]').filterTable();
+  })(jQuery);
+
+  $(function(){
+      // attach table filter plugin to inputs
+  	$('[data-action="filter"]').filterTable();
+  	
+  	$('.container').on('click', '.panel-heading span.filter', function(e){
+  		var $this = $(this), 
+  			$panel = $this.parents('.panel');
+  		
+  		$panel.find('.panel-body').slideToggle();
+  		if($this.css('display') != 'none') {
+  			$panel.find('.panel-body input').focus();
+  		}
+  	});
+//   	$('[data-toggle="tooltip"]').tooltip();
+  })
+  
+  </script>
+
+</html>

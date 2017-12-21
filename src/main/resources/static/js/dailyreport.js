@@ -10,7 +10,13 @@ function login(){
 		}
 	}).then(
 			function(data) {
-				alert(data)
+				if(data == false){
+					alert("Authetication Failed !!")
+				}else{
+					window.location.href="/view";
+				}
 			});
 	
 }
+
+

@@ -94,6 +94,11 @@
 			<version>1.2.17</version>
 		</dependency>
 
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.atlassian.httpclient</groupId>
@@ -101,11 +106,17 @@
 			<version>0.13.2</version>
 		</dependency>
 
+		<!-- <dependency> -->
+		<!-- <groupId>org.springframework.boot</groupId> -->
+		<!-- <artifactId>spring-boot-starter-security</artifactId> -->
+		<!-- </dependency> -->
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<optional>true</optional>
 		</dependency>
-
+		
 	</dependencies>
 
 	<build>
