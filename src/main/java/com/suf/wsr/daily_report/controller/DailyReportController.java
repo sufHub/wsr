@@ -1,33 +1,31 @@
 package com.suf.wsr.daily_report.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.atlassian.util.concurrent.Promise;
 import com.suf.wsr.daily_report.intf.DailyReportException;
 import com.suf.wsr.daily_report.intf.DailyReportIntf;
 
@@ -64,11 +62,30 @@ public class DailyReportController {
 		return "index";
 	}
 
+	@RequestMapping("/popup")
+	String popup(Model model) {
+		return "popup";
+	}
+
+	@RequestMapping(value = "/logWork")
+	@ResponseBody
+	String logWork(HttpServletRequest request, HttpServletResponse response,
+			@RequestParam(value = "timeSpent", required = true) String timeSpent,
+			@RequestParam(value = "remainingEst", required = true) String remainingEst,
+			@RequestParam(value = "manualEst", required = true) String manualEst,
+			@RequestParam(value = "comments", required = true) String comments,
+			@RequestParam(value = "ticket", required = true) String ticket
+			){
+
+		String status = dailyReport.logWork(request, timeSpent, remainingEst, manualEst, comments, ticket);
+
+		return status;
+
+	}
+
 	@RequestMapping("/view")
 	ModelAndView view(Model model, HttpServletRequest request, HttpServletResponse response)
 			throws RestClientException, InterruptedException, ExecutionException, URISyntaxException {
-		System.out.println("VIEWING....................");
-		System.out.println();
 
 		String username = (String) request.getSession().getAttribute("username");
 		String password = (String) request.getSession().getAttribute("password");
@@ -79,104 +96,37 @@ public class DailyReportController {
 
 		ModelAndView view = new ModelAndView("view");
 		view.addObject("username", request.getSession().getAttribute("username"));
-		view.addObject("table", getJiraTickets(username, password));
+		view.addObject("table", dailyReport.getJiraTickets(username, password, request));
 		return view;
-
 	}
 
-	private List<JiraDTO> getJiraTickets(String username, String password)
-			throws URISyntaxException, InterruptedException, ExecutionException {
-		JiraRestClientFactory restClientFactory = new AsynchronousJiraRestClientFactory();
-		final URI jiraServerUri = new URI("http://jira.lexisnexis.fr/");
-		JiraRestClient restClient = restClientFactory.createWithBasicHttpAuthentication(jiraServerUri, username,
-				password);
-		System.out.println(restClient.getSessionClient().getCurrentSession().get().getUsername());
 
-		Promise<SearchResult> results = restClient.getSearchClient().searchJql(
-				"assignee in (UMMERFAS, RIZWANS, BASKARS2) AND Sprint in openSprints() ORDER BY assignee ASC, status ASC");
-
-		List<JiraDTO> ticketList = new ArrayList<JiraDTO>();
-
-		for (BasicIssue issue : results.get().getIssues()) {
-			JiraDTO jira = new JiraDTO();
-			String key = issue.getKey();
-			Issue ticket = restClient.getIssueClient().getIssue(key).get();
-
-			jira.setTicketNumber(ticket.getKey());
-			
-			jira.setAssignee(validate(ticket, "assignee"));
-			jira.setEstimated(validate(ticket, "estimated"));
-			jira.setLogged(validate(ticket, "logged"));
-			jira.setRemaining(validate(ticket, "remaining"));
-			jira.setReporter(validate(ticket,"reporter"));
-			jira.setResolution(validate(ticket,"resoultion"));
-			jira.setStatus(validate(ticket, "status"));
-
-			jira.setComponents(nullCheckString(ticket.getComponents().toString()));
-			jira.setCreated(nullCheckString(ticket.getCreationDate().toString()));
-			jira.setDescription(nullCheckString(ticket.getDescription()));
-			jira.setLabels(nullCheckString(ticket.getLabels().toString()));
-			jira.setPriority(nullCheckString(ticket.getPriority().getName()));
-			jira.setType(nullCheckString(ticket.getIssueType().getName()));
-			jira.setUpdated(nullCheckString(ticket.getUpdateDate().toString()));
-
-			ticketList.add(jira);
+	@ResponseStatus(HttpStatus.OK)
+	@RequestMapping("/generateExcel")
+	public HttpEntity<byte[]> generateExcel(Model model, HttpServletRequest request, HttpServletResponse response) throws IOException {
+		
+		String username = (String) request.getSession().getAttribute("username");
+		if (username == null) {
+			response.sendRedirect("");
+			return null;
 		}
 
-		return ticketList;
-	}
+		response = dailyReport.generateExcel(request, response);
 
-	private String validate(Issue ticket, String tobeChecked) {
+		FileInputStream fis = new FileInputStream(new File("DailyReport.xlsx"));
+		byte[] excelContent = IOUtils.toByteArray(fis);
 
-		switch(tobeChecked){
-		case "estimated":
-			return (nullCheckObject(ticket.getTimeTracking()) && ticket.getTimeTracking().getOriginalEstimateMinutes() != null)
-					? ticket.getTimeTracking().getOriginalEstimateMinutes().toString() : "";
+		HttpHeaders header = new HttpHeaders();
+		header.setContentType(new MediaType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+		header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=DailyReport.xlsx");
+		header.setContentLength(excelContent.length);
 
-		case "logged":
-			return (nullCheckObject(ticket.getTimeTracking()) && ticket.getTimeTracking().getTimeSpentMinutes() != null)
-					? ticket.getTimeTracking().getTimeSpentMinutes().toString() : "";
+		return new HttpEntity<byte[]>(excelContent, header);
 
-		case "remaining":
-			return (nullCheckObject(ticket.getTimeTracking()) &&  ticket.getTimeTracking().getRemainingEstimateMinutes() != null)
-					? ticket.getTimeTracking().getRemainingEstimateMinutes().toString() : "";
-					
-		case "assignee":
-			return (nullCheckObject(ticket.getAssignee()) && nullCheckObject(ticket.getAssignee().getDisplayName()))
-					? ticket.getAssignee().getDisplayName() : "";
-					
-		case "reporter":
-			return (nullCheckObject(ticket.getReporter()) && ticket.getReporter().getDisplayName() != null) 
-					? ticket.getReporter().getDisplayName() : "";
-					
-		case "resolution":
-			return  (nullCheckObject(ticket.getResolution()) && ticket.getResolution().getName() != null) 
-					? ticket.getResolution().getName() : "";
-					
-		case "status":
-			return (nullCheckObject(ticket.getStatus()) && ticket.getStatus().getName() != null) 
-					? ticket.getStatus().getName() : "";
 
-		default:
-			return "";
-		}
-	}
-
-	private boolean nullCheckObject(Object tobeChecked) {
-		if (tobeChecked != null) {
-			return true;
-		} else {
-			return false;
-		}
 	}
 
 
-	private String nullCheckString(String tobeChecked) {
-		if (tobeChecked != null) {
-			return tobeChecked;
-		} else {
-			return "";
-		}
-	}
+
 
 }

@@ -1,0 +1,69 @@
+<!--  <html>
+	<head>
+		<link rel="stylesheet"
+			href="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"></link>
+			<link rel="stylesheet"
+				href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css"></link>
+	</head>
+	<body>
+		<br></br>
+		<br></br>
+ -->
+		<div class='container'>
+			<div class='row'>
+				<div class='col-md-6'>
+					<div class='well well-sm' style="background-color:#f7f8f9">
+						<form class='form-horizontal' action='' method='post'>
+							<fieldset>
+								<div class='form-group'>
+									<label class='col-md-3 control-label' for='name'>Time Spent
+									</label>
+									<div class='col-md-9'>
+										<input id='timeSpent' name='timeSpent' type='text'
+											placeholder='3w 4d 12h' class='form-control' style="width: 25%;display: inline;"></input>
+									</div>
+								</div>
+
+								<div class='form-group'>
+									<label class='col-md-3 control-label' for='name'>Remaining
+										Estimate
+									</label>
+									<div class='col-md-9'>
+										<div class="radio">
+											<label>
+												<input id='remAuto' name='remainingEst' value="auto" type='radio'>Adjust
+													Automatically
+												</input>
+											</label>
+										</div>
+
+										<div class="radio">
+											<label>
+												<input id='remManual' name='remainingEst' value="manual" type='radio'>
+													Set to
+													<input type="text" id="manualEst" class='form-control' onclick="document.getElementById('remManual').checked='true'"
+														style="width: 40%;display: inline;" placeholder='3w 4d 12h' />
+												</input>
+											</label>
+										</div>
+									</div>
+								</div>
+
+								<div class='form-group'>
+									<label class='col-md-3 control-label' for='message'>Comments
+									</label>
+									<div class='col-md-9'>
+										<textarea class='form-control' id='comments' name='comments'
+											placeholder='Please enter your comments here...' rows='5'></textarea>
+									</div>
+								</div>
+
+							</fieldset>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--
+	</body>
+</html> -->

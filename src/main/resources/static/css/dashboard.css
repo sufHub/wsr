@@ -199,3 +199,7 @@ background-color: #4f5467;
 text-decoration: none;
 color: #04A3ED;
 }
+
+.modal-body{
+	padding:0;
+}

@@ -18,6 +18,7 @@ public class JiraDTO {
 	private String labels;
 	private String priority;
 	private String type;
+	private String summary;
 	
 	public String getTicketNumber() {
 		return ticketNumber;
@@ -114,6 +115,12 @@ public class JiraDTO {
 	}
 	public void setType(String type) {
 		this.type = type;
+	}
+	public String getSummary() {
+		return summary;
+	}
+	public void setSummary(String summary) {
+		this.summary = summary;
 	}
  
 	

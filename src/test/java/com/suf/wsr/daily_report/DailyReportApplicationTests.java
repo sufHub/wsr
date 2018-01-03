@@ -1,16 +1,18 @@
 package com.suf.wsr.daily_report;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.testng.annotations.Test;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest
+import com.suf.wsr.daily_report.controller.DailyReportController;
+
+@Test
 public class DailyReportApplicationTests {
-
-	@Test
-	public void contextLoads() {
+	
+	void testWorklog(){
+		
+		DailyReportController control = new DailyReportController();
+		
+		
 	}
+
 
 }
