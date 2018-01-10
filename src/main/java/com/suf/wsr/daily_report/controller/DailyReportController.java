@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -66,7 +68,7 @@ public class DailyReportController {
 	String popup(Model model) {
 		return "popup";
 	}
-	
+
 	@RequestMapping("/logOut")
 	@ResponseBody
 	String logOut(HttpServletRequest request,HttpServletResponse response) throws IOException {
@@ -113,7 +115,7 @@ public class DailyReportController {
 	@ResponseStatus(HttpStatus.OK)
 	@RequestMapping("/generateExcel")
 	public HttpEntity<byte[]> generateExcel(Model model, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		
+
 		String username = (String) request.getSession().getAttribute("username");
 		if (username == null) {
 			response.sendRedirect("");
@@ -124,18 +126,22 @@ public class DailyReportController {
 
 		FileInputStream fis = new FileInputStream(new File("DailyReport.xlsx"));
 		byte[] excelContent = IOUtils.toByteArray(fis);
-
+		String fileName = getFileName()+".xlsx";
+		
 		HttpHeaders header = new HttpHeaders();
 		header.setContentType(new MediaType("application", "vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-		header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=DailyReport.xlsx");
+		header.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="+fileName);
 		header.setContentLength(excelContent.length);
 
 		return new HttpEntity<byte[]>(excelContent, header);
 
-
 	}
 
-
-
+	public String getFileName() {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("ddMMMyyyy");
+		String formatDateTime = now.format(formatter);
+		return "StatusReport_"+formatDateTime;
+	}
 
 }
