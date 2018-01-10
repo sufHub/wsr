@@ -1,13 +1,13 @@
 function login(){
-	
+
 	var username = $("#username").val();
 	var password = $("#password").val();
 	$.ajax({
 		url : "login",
 		data : {
-			username : username,
-			password : password
-		}
+		username : username,
+		password : password
+	}
 	}).then(
 			function(data) {
 				if(data == false){
@@ -15,52 +15,74 @@ function login(){
 				}else{
 					window.location.href="/view";
 				}
-	});
-	
+			});
+
 }
 
 function logWork(obj){
-	
-	 $.get("/popup", function(html_string)
-	 {
-		 var dialog = bootbox.dialog({
-				title: 'Work Log for Ticket : '+obj.id,
-				message: html_string,
-				buttons: {
-				    ok: {
-				        label: "Log Work",
-				        className: 'btn btn-success',
-				        callback: function(){
-			 
-							$.ajax({
-								url : "logWork",
-								data : {
-									timeSpent : $("#timeSpent").val(),
-									remainingEst : $("input[name='remainingEst']:checked").val(),
-									manualEst : $("#manualEst").val(),
-									comments : $("#comments").val(),
-									ticket : obj.id
-								}
-							}).then(
-									function(data) {
-										if(data == false){
-											alert("Authetication Failed !!")
-										}else{
-											window.location.href="/view";
-										}
-							});
-							
-				        }
-				    }
-				}
-		});
-	 },'html'); 
-	
-	
+
+	$.get("/popup", function(html_string)
+			{
+		var dialog = bootbox.dialog({
+			title: 'Work Log for Ticket : '+obj.id,
+			message: html_string,
+			buttons: {
+			ok: {
+			label: "Log Work",
+			className: 'btn btn-success',
+			callback: function(){
+
+			var timeSpent = $("#timeSpent").val();
+			var manualEst = $("#manualEst").val();
+			
+			var remAuto = $('#remAuto').prop('checked');
+			var remManual = $('#remManual').prop('checked');
+
+			
+			
+			if(remAuto == true && timeSpent == ""){
+				alert("Enter the Time Spent !!")
+			}
+			
+			if(remManual == true && manualEst == ""){
+				alert("Enter the Remaining Estimate !!")
+			}
+			
+			$.ajax({
+				url : "logWork",
+				data : {
+				timeSpent : $("#timeSpent").val(),
+				remainingEst : $("input[name='remainingEst']:checked").val(),
+				manualEst : $("#manualEst").val(),
+				comments : $("#comments").val(),
+				ticket : obj.id
+			}
+			}).then(
+					function(data) {
+						if(data == "index"){
+							alert("Session TimeOut !!");
+							window.location.href="/";
+						}
+						else if(data == "error"){
+							alert("Error While Logging Work !!")
+						}
+						else if(data == "invalidTime"){
+							alert("Invalid Time Format!")
+						}
+						else{
+							alert("Work Logged !!")
+							window.location.href="/view";
+						}
+					});
+
+		}}}});
+			},'html'); 
+
+
 }
 
 function logOut(){
-	
+
 	$.ajax({
 		url : "logOut"
 	}).then(
@@ -70,7 +92,7 @@ function logOut(){
 				}
 			}
 			);
-	
+
 }
 
 function generateExcel(){

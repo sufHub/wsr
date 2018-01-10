@@ -19,7 +19,7 @@
 									<label class='col-md-3 control-label' for='name'>Time Spent
 									</label>
 									<div class='col-md-9'>
-										<input id='timeSpent' name='timeSpent' type='text'
+										<input id='timeSpent' name='timeSpent' type='text' 
 											placeholder='3w 4d 12h' class='form-control' style="width: 25%;display: inline;"></input>
 									</div>
 								</div>
@@ -31,7 +31,8 @@
 									<div class='col-md-9'>
 										<div class="radio">
 											<label>
-												<input id='remAuto' name='remainingEst' value="auto" type='radio'>Adjust
+												<input id='remAuto' checked="checked" name='remainingEst' value="auto" type='radio'
+													onclick="$('#timeSpent').prop('disabled', false); $('#manualEst').prop('disabled', true);">Adjust
 													Automatically
 												</input>
 											</label>
@@ -39,9 +40,11 @@
 
 										<div class="radio">
 											<label>
-												<input id='remManual' name='remainingEst' value="manual" type='radio'>
+												<input id='remManual' name='remainingEst' value="manual" type='radio'
+												onclick="$('#timeSpent').prop('disabled', true); $('#manualEst').prop('disabled', false); ">
 													Set to
-													<input type="text" id="manualEst" class='form-control' onclick="document.getElementById('remManual').checked='true'"
+													<input disabled='true' type="text" id="manualEst" class='form-control' 
+													onclick="document.getElementById('remManual').checked='true';$('#timeSpent').prop('disabled', true);"
 														style="width: 40%;display: inline;" placeholder='3w 4d 12h' />
 												</input>
 											</label>

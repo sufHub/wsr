@@ -131,21 +131,34 @@ public class DailyReportImpl implements DailyReportIntf {
 				returns = "index";
 			} else {
 
-				JiraRestClient jiraClient = getJiraClient(username, password, request);
+				String jiraTimeCheck = "invalid";
 
-				final Issue issue = jiraClient.getIssueClient().getIssue(ticket).get();
-
-				if (remainingEst.equals("auto")) {
-					worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
-							.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent)).setAdjustEstimateAuto()
-							.build();
-				} else {
-					worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
-							.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent))
-							.setAdjustEstimateManual(convertToMinutes(manualEst)).build();
+				jiraTimeCheck = validateJiraTimeStr(timeSpent);
+				if(!remainingEst.equals("auto")){
+					jiraTimeCheck =  validateJiraTimeStr(manualEst);
 				}
 
-				jiraClient.getIssueClient().addWorklog(issue.getWorklogUri(), worklogInput);
+				if(jiraTimeCheck.equals("valid")){
+
+					JiraRestClient jiraClient = getJiraClient(username, password, request);
+					final Issue issue = jiraClient.getIssueClient().getIssue(ticket).get();
+
+					if (remainingEst.equals("auto")) {
+						worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
+								.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent)).setAdjustEstimateAuto()
+								.build();
+					} else {
+						worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
+								.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent))
+								.setAdjustEstimateManual(convertToMinutes(manualEst)).build();
+					}
+
+					jiraClient.getIssueClient().addWorklog(issue.getWorklogUri(), worklogInput);
+
+				}else{
+					returns = "invalidTime"; 
+				}
+
 			}
 
 		} catch (InterruptedException | ExecutionException | URISyntaxException e) {
@@ -161,7 +174,7 @@ public class DailyReportImpl implements DailyReportIntf {
 		file.delete();
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
-		XSSFSheet sheet = workbook.createSheet("Datatypes in Java");
+		XSSFSheet sheet = workbook.createSheet("Status Report");
 
 		String username = (String) request.getSession().getAttribute("username");
 		String password = (String) request.getSession().getAttribute("password");
@@ -175,7 +188,7 @@ public class DailyReportImpl implements DailyReportIntf {
 			String[] headers = new String[] {"Ticket", "Summary","Assignee","Reporter","Status","Points to be discussed","Work Logged on Current","Planned Duration","Remaining Estaimation","Estimation Comments","Target Date"};
 			int noOfColumns = headers.length-1;
 			int rowCount = 0;
-			
+
 			Row rowZero = sheet.createRow(rowCount++);
 			CellStyle style = workbook.createCellStyle();
 			Font font = workbook.createFont();
@@ -231,6 +244,41 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 
 		return response;
+	}
+
+
+	private String validateJiraTimeStr(String test) {
+
+		List<String> charList = new ArrayList<String>();
+		charList.add("w");
+		charList.add("d");
+		charList.add("h");
+		charList.add("m");
+
+		String ret = "invalid";
+		String[] testArr = test.trim().split(" ");
+		for(String t : testArr){
+			if(t.length() >=2 && checkNumeric(t.substring(0, t.length()-1)) ){
+				if(charList.contains(Character.toString(t.charAt(t.length()-1)).toLowerCase())){
+					charList.remove(Character.toString(t.charAt(t.length()-1)));
+					ret =  "valid";
+				}else
+				{
+					ret = "invalid";
+					break;
+				}
+			}else{
+				ret = "invalid";
+				break;
+			}
+		}
+
+		return ret;
+	}
+
+	private static boolean checkNumeric(String substring) {
+		boolean isNumeric = substring.chars().allMatch( Character::isDigit );
+		return isNumeric;
 	}
 
 	private void alignSheet(XSSFSheet sheet) {
