@@ -66,6 +66,15 @@ public class DailyReportController {
 	String popup(Model model) {
 		return "popup";
 	}
+	
+	@RequestMapping("/logOut")
+	@ResponseBody
+	String logOut(HttpServletRequest request,HttpServletResponse response) throws IOException {
+		HttpSession session = request.getSession();
+		session.removeAttribute("username");
+		session.removeAttribute("password");
+		return "logout";
+	}
 
 	@RequestMapping(value = "/logWork")
 	@ResponseBody

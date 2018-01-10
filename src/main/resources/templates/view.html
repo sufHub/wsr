@@ -8,7 +8,7 @@
 <meta name="author" content="" />
 <link rel="icon" href="../../favicon.ico" />
 
-<title>Jira Snapshot</title>
+<title>Daily Report</title>
 
 <!-- Bootstrap core CSS -->
 
@@ -37,7 +37,7 @@
 			</div>
 			<div>
 				<ul class="nav navbar-nav navbar-right">
-					<li><a href="#"><span class="glyphicon glyphicon-log-in"></span>
+					<li onclick="javaScript: logOut();"><a href="#"><span class="glyphicon glyphicon-log-in"></span>
 							Sign Out</a></li>
 				</ul>
 			</div>
@@ -47,7 +47,15 @@
 		<div class="widget stacked widget-table action-table">
 
 			<div class="container" style="margin-left: 38px; padding:0; width: 1265px">
-				<br /> <br /> <span><b>Summary :</b></span>
+				<br /> 
+				<div class="">
+					<div style="display: inline;width: 50%;">
+						<b>Summary :</b>
+					</div>
+					<div style="float: right;">
+						<a onclick="javaScript: generateExcel(); "><img src="img/excel.png" style="width: 40px;" alt="Generate Excel"></img></a>
+					</div>
+				</div>
 				<div class="row">
 					<div class="">
 						<div class="panel panel-success">

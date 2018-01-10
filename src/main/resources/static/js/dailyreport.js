@@ -59,4 +59,20 @@ function logWork(obj){
 	
 }
 
+function logOut(){
+	
+	$.ajax({
+		url : "logOut"
+	}).then(
+			function(data) {
+				if(data="logout"){
+					window.location.href="/";
+				}
+			}
+			);
+	
+}
 
+function generateExcel(){
+	window.location.href="/generateExcel";
+}

@@ -14,10 +14,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.joda.time.DateTime;
@@ -174,7 +176,7 @@ public class DailyReportImpl implements DailyReportIntf {
 			String[] headers = new String[] {"Ticket", "Summary","Assignee","Reporter","Status","Points to be discussed","Work Logged on Current","Planned Duration","Remaining Estaimation","Estimation Comments","Target Date"};
 			int noOfColumns = headers.length-1;
 			int rowCount = 0;
-
+			
 			Row rowZero = sheet.createRow(rowCount++);
 			CellStyle style = workbook.createCellStyle();
 			Font font = workbook.createFont();
@@ -185,6 +187,10 @@ public class DailyReportImpl implements DailyReportIntf {
 				rowZero.setHeightInPoints(50);
 				cell.setCellValue(headers[col]);
 				style.setWrapText(true); //Set wordwrap
+				style.setBorderTop(BorderStyle.THIN );
+				style.setBorderBottom(BorderStyle.THIN);
+				style.setBorderLeft(BorderStyle.THIN);
+				style.setBorderRight(BorderStyle.THIN);
 				cell.setCellStyle(style);
 			}
 
@@ -199,7 +205,7 @@ public class DailyReportImpl implements DailyReportIntf {
 				createCell(workbook, jira.getReporter(), row, 3);
 				createCell(workbook, jira.getStatus(), row, 4);
 				createCell(workbook, "", row, 5);
-				createCell(workbook, jira.getLogged(), row, 6);
+				createCell(workbook, "", row, 6);
 				createCell(workbook, jira.getEstimated(), row, 7);
 				createCell(workbook, jira.getRemaining(), row, 8);
 				createCell(workbook, "", row, 9);
@@ -251,11 +257,15 @@ public class DailyReportImpl implements DailyReportIntf {
 	}
 
 	private void textWrap(XSSFWorkbook workbook, String jira, Cell cell) {
+		CellStyle styles = workbook.createCellStyle();
+		styles.setBorderTop(BorderStyle.THIN );
+		styles.setBorderBottom(BorderStyle.THIN);
+		styles.setBorderLeft(BorderStyle.THIN);
+		styles.setBorderRight(BorderStyle.THIN);
 		if(jira.length() > 50){
-			CellStyle styles = workbook.createCellStyle();
 			styles.setWrapText(true);
-			cell.setCellStyle(styles); 
 		}
+		cell.setCellStyle(styles); 
 	}
 
 	private JiraRestClient getJiraClient(String username, String password, HttpServletRequest request)
