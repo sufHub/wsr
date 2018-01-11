@@ -65,8 +65,16 @@ public class DailyReportController {
 	}
 
 	@RequestMapping("/popup")
-	String popup(Model model) {
-		return "popup";
+	ModelAndView popup(@RequestParam(value = "ticket", required = true) String ticket) {
+		System.out.println(ticket);
+		
+		JiraDTO jira = dailyReport.getWorkLogDetails(ticket);
+		
+		ModelAndView view = new ModelAndView("popup");
+		view.addObject("comments", jira.getExcelComments());
+		view.addObject("estComments", jira.getExcelEstComments());
+		
+		return view;
 	}
 
 	@RequestMapping("/logOut")
@@ -85,10 +93,12 @@ public class DailyReportController {
 			@RequestParam(value = "remainingEst", required = true) String remainingEst,
 			@RequestParam(value = "manualEst", required = true) String manualEst,
 			@RequestParam(value = "comments", required = true) String comments,
+			@RequestParam(value = "excelEstComm", required = true) String excelEstComm,
+			@RequestParam(value = "excelDP", required = true) String excelDP,
 			@RequestParam(value = "ticket", required = true) String ticket
 			){
 
-		String status = dailyReport.logWork(request, timeSpent, remainingEst, manualEst, comments, ticket);
+		String status = dailyReport.logWork(request, timeSpent, remainingEst, manualEst, comments, ticket, excelDP, excelEstComm);
 
 		return status;
 

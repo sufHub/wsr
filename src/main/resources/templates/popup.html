@@ -1,17 +1,20 @@
-<!--  <html>
+<!-- 		
+  <html>
 	<head>
 		<link rel="stylesheet"
 			href="https://netdna.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css"></link>
 			<link rel="stylesheet"
 				href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css"></link>
+				<script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
 	</head>
 	<body>
 		<br></br>
 		<br></br>
- -->
+-->
+ 
 		<div class='container'>
-			<div class='row'>
-				<div class='col-md-6'>
+			<div class='row' style="margin-top:10px">
+				<div class='col-md-6' style="width: 68%">
 					<div class='well well-sm' style="background-color:#f7f8f9">
 						<form class='form-horizontal' action='' method='post'>
 							<fieldset>
@@ -23,7 +26,7 @@
 											placeholder='3w 4d 12h' class='form-control' style="width: 25%;display: inline;"></input>
 									</div>
 								</div>
-
+								
 								<div class='form-group'>
 									<label class='col-md-3 control-label' for='name'>Remaining
 										Estimate
@@ -32,7 +35,7 @@
 										<div class="radio">
 											<label>
 												<input id='remAuto' checked="checked" name='remainingEst' value="auto" type='radio'
-													onclick="$('#timeSpent').prop('disabled', false); $('#manualEst').prop('disabled', true);">Adjust
+													onclick="$('#manualEst').prop('disabled', true);">Adjust
 													Automatically
 												</input>
 											</label>
@@ -41,10 +44,10 @@
 										<div class="radio">
 											<label>
 												<input id='remManual' name='remainingEst' value="manual" type='radio'
-												onclick="$('#timeSpent').prop('disabled', true); $('#manualEst').prop('disabled', false); ">
+												onclick="$('#manualEst').prop('disabled', false); ">
 													Set to
 													<input disabled='true' type="text" id="manualEst" class='form-control' 
-													onclick="document.getElementById('remManual').checked='true';$('#timeSpent').prop('disabled', true);"
+													onclick="document.getElementById('remManual').checked='true';$('#manualEst').prop('disabled', false);"
 														style="width: 40%;display: inline;" placeholder='3w 4d 12h' />
 												</input>
 											</label>
@@ -53,13 +56,34 @@
 								</div>
 
 								<div class='form-group'>
-									<label class='col-md-3 control-label' for='message'>Comments
+									<label class='col-md-3 control-label' for='message'>WorkLog Comments
 									</label>
 									<div class='col-md-9'>
-										<textarea class='form-control' id='comments' name='comments'
-											placeholder='Please enter your comments here...' rows='5'></textarea>
+										<textarea style="height: 75px;" class='form-control' id='comments' name='comments'
+											placeholder='Please enter your WorkLog comments here...' rows='5'></textarea>
 									</div>
 								</div>
+								
+								<div class='form-group'>
+									<label class='col-md-3 control-label' for='message'>Excel : Discussion points
+									</label>
+									<div class='col-md-9'>
+										<textarea style="height: 75px;" class='form-control' id='excelDP' name='excelDP'
+											placeholder='Please enter your Discussion points here...' rows='5'></textarea>
+									</div>
+								</div>
+								
+								<div class='form-group'>
+									<label class='col-md-3 control-label' for='message'>Excel : Estimation Comments
+									</label>
+									<div class='col-md-9'>
+										<textarea style="height: 75px;" class='form-control' id='excelEstComm' name='excelEstComm' 
+											placeholder='Please enter your Estimation comments here...' rows='5'></textarea>
+									</div>
+								</div>
+								
+								<span id="commentsSpan" style="display: none" th:text="${comments}" />
+								<span id="estCommentsSpan" style="display: none" th:text="${estComments}" />
 
 							</fieldset>
 						</form>
@@ -67,6 +91,17 @@
 				</div>
 			</div>
 		</div>
-		<!--
+		
+		<script type="text/javaScript">
+		
+		  var comments = document.getElementById("commentsSpan").innerHTML;
+		  var estComments = document.getElementById("estCommentsSpan").innerHTML;
+		  document.getElementById('excelDP').value = comments;
+		  document.getElementById('excelEstComm').value = estComments;
+			
+		</script>
+		
+<!-- 		
+		
 	</body>
-</html> -->
+</html>  -->

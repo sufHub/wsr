@@ -20,6 +20,12 @@ public class JiraDTO {
 	private String type;
 	private String summary;
 	
+	private String excelComments;
+	private String excelEstComments;
+	private String workLogComments;
+	private String workLogDate;
+	
+	
 	public String getTicketNumber() {
 		return ticketNumber;
 	}
@@ -121,6 +127,30 @@ public class JiraDTO {
 	}
 	public void setSummary(String summary) {
 		this.summary = summary;
+	}
+	public String getExcelComments() {
+		return excelComments;
+	}
+	public void setExcelComments(String excelComments) {
+		this.excelComments = excelComments;
+	}
+	public String getExcelEstComments() {
+		return excelEstComments;
+	}
+	public void setExcelEstComments(String excelEstComments) {
+		this.excelEstComments = excelEstComments;
+	}
+	public String getWorkLogComments() {
+		return workLogComments;
+	}
+	public void setWorkLogComments(String workLogComments) {
+		this.workLogComments = workLogComments;
+	}
+	public String getWorkLogDate() {
+		return workLogDate;
+	}
+	public void setWorkLogDate(String workLogDate) {
+		this.workLogDate = workLogDate;
 	}
  
 	

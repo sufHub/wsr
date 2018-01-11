@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -22,6 +24,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
@@ -34,15 +38,20 @@ import com.atlassian.jira.rest.client.api.domain.input.WorklogInputBuilder;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
 import com.suf.wsr.daily_report.controller.JiraDTO;
+import com.suf.wsr.daily_report.dao.DailyReportDaoImpl;
 import com.suf.wsr.daily_report.intf.DailyReportException;
 import com.suf.wsr.daily_report.intf.DailyReportIntf;
 
+@Import(value = { DailyReportDaoImpl.class })
 public class DailyReportImpl implements DailyReportIntf {
 
 	private static final String FILE_NAME = "DailyReport";
 	private static final String FILE_EXT = ".xlsx";
 
 	private static final Logger LOGGER = Logger.getLogger(DailyReportImpl.class);
+	
+	@Autowired
+	DailyReportDaoImpl dao;
 
 	@Override
 	public List<String> getTickets(String username, String password) {
@@ -82,14 +91,17 @@ public class DailyReportImpl implements DailyReportIntf {
 		// TODO : Update the JQL
 
 		List<JiraDTO> ticketList = new ArrayList<JiraDTO>();
-
+		
+		List<String> dbTicketList = dao.getAllTicketKeys();
+		List<JiraDTO> notInDbList = new ArrayList<JiraDTO>();
+ 
 		for (BasicIssue issue : results.get().getIssues()) {
 			JiraDTO jira = new JiraDTO();
 			String key = issue.getKey();
 			Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
 
 			jira.setTicketNumber(ticket.getKey());
-
+			
 			jira.setAssignee(validate(ticket, "assignee"));
 			jira.setReporter(validate(ticket, "reporter"));
 			jira.setResolution(validate(ticket, "resoultion"));
@@ -110,14 +122,22 @@ public class DailyReportImpl implements DailyReportIntf {
 			jira.setUpdated(removeTimeZone(nullCheckString(ticket.getUpdateDate().toString())));
 
 			ticketList.add(jira);
+			
+			if(!dbTicketList.contains(ticket.getKey())){
+				notInDbList.add(jira);
+			}
 		}
+		
+		// Adding the tickets in DB
+		if(!notInDbList.isEmpty())
+		dao.addTicket(notInDbList);
 
 		return ticketList;
 	}
 
 	@Override
 	public String logWork(HttpServletRequest request, String timeSpent, String remainingEst, String manualEst,
-			String comments, String ticket) {
+			String comments, String ticket, String excelDP, String excelEstComm) {
 
 		String returns = "";
 
@@ -154,6 +174,11 @@ public class DailyReportImpl implements DailyReportIntf {
 					}
 
 					jiraClient.getIssueClient().addWorklog(issue.getWorklogUri(), worklogInput);
+					
+					// Add work logged in DB
+					
+					dao.updateWorkLog(ticket, getCurrentDateTime(), excelDP, excelEstComm);
+					
 
 				}else{
 					returns = "invalidTime"; 
@@ -165,6 +190,13 @@ public class DailyReportImpl implements DailyReportIntf {
 			return "error";
 		}
 		return returns;
+	}
+	
+	private String getCurrentDateTime() {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
+		String formatDateTime = now.format(formatter);
+		return formatDateTime;
 	}
 
 	@Override
@@ -208,19 +240,23 @@ public class DailyReportImpl implements DailyReportIntf {
 
 			rowCount = 0;
 			for(JiraDTO jira : tickets){
+				
+				//Fetch Comments from DB
+				JiraDTO jiraDB = new JiraDTO();
+				jiraDB = dao.getWorkLog(jira.getTicketNumber());
 
 				Row row = sheet.createRow(++rowCount);
-
+				
 				createCell(workbook, jira.getTicketNumber(), row, 0);
 				createCell(workbook, jira.getSummary(), row, 1);
 				createCell(workbook, jira.getAssignee(), row, 2);
 				createCell(workbook, jira.getReporter(), row, 3);
 				createCell(workbook, jira.getStatus(), row, 4);
-				createCell(workbook, "", row, 5);
+				createCell(workbook, nullCheckString(jiraDB.getExcelComments()), row, 5);
 				createCell(workbook, "", row, 6);
 				createCell(workbook, jira.getEstimated(), row, 7);
 				createCell(workbook, jira.getRemaining(), row, 8);
-				createCell(workbook, "", row, 9);
+				createCell(workbook, nullCheckString(jiraDB.getExcelEstComments()), row, 9);
 				createCell(workbook, "", row, 10);
 
 			}
@@ -244,6 +280,12 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 
 		return response;
+	}
+	
+	
+	@Override
+	public JiraDTO getWorkLogDetails(String ticket) {
+		return dao.getWorkLog(ticket);
 	}
 
 
@@ -469,5 +511,6 @@ public class DailyReportImpl implements DailyReportIntf {
 	private String removeTimeZone(String time) {
 		return time.replace(".000+05:30", "").replace("T", " ");
 	}
+
 
 }

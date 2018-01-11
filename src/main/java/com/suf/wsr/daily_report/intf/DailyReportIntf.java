@@ -21,9 +21,11 @@ public interface DailyReportIntf {
 			throws URISyntaxException, InterruptedException, ExecutionException;
 
 	String logWork(HttpServletRequest request, String timeSpent, String remainingEst, String manualEst, String comments,
-			String ticket);
+			String ticket, String excelDP, String excelEstComm);
 
 	HttpServletResponse generateExcel(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException;
+
+	JiraDTO getWorkLogDetails(String ticket);
 	
 
 }

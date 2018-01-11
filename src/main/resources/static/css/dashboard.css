@@ -203,3 +203,9 @@ color: #04A3ED;
 .modal-body{
 	padding:0;
 }
+
+
+.modal-dialog {
+    width: 800px;
+    margin: 30px auto;
+}
