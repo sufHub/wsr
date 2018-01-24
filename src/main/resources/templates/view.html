@@ -50,13 +50,13 @@
 				<br /> 
 				<div class="">
 					<div style="display: inline;width: 50%;">
-						<b>Summary :</b>
+						<a href="javascript:void(0);" onclick="javaScript: workLogToday(); "><img src="img/summary.png" style="width: 35px;" alt="Work Logged Today"></img></a>
 					</div>
 					<div style="float: right;">
-						<a onclick="javaScript: generateExcel(); "><img src="img/excel.png" style="width: 35px;" alt="Generate Excel"></img></a>
+						<a href="javascript:void(0);" onclick="javaScript: generateExcel(); "><img src="img/excel.png" style="width: 35px;" alt="Generate Excel"></img></a>
 					</div>
 				</div>
-				<div class="row">
+				<div class="row" style="margin-top: 15px">
 					<div class="">
 						<div class="panel panel-success">
 							<div class="panel-heading" style="color: white;background-color: #429de8; border-color: #d6e9c6;">
@@ -116,7 +116,7 @@
 <!-- 										<td th:text="${jira.labels}">labels</td> -->
 										<td th:text="${jira.priority}">Priority</td>
 <!-- 										<td th:text="${jira.type}">type</td> -->
-										<td><img th:id="${jira.ticketNumber}" src="img/clock.png" onclick="javaScript:logWork(this)" alt="Log Work" style="width:30px" /></td>
+										<td><a onclick="javaScript:logWork(this)" href="javascript:void(0);"  ><img th:id="${jira.ticketNumber}" src="img/clock.png" alt="Log Work" style="width:30px" /></a></td>
 										
 									</tr>
 								</tbody>

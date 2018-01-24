@@ -177,7 +177,7 @@ public class DailyReportImpl implements DailyReportIntf {
 					
 					// Add work logged in DB
 					
-					dao.updateWorkLog(ticket, getCurrentDateTime(), excelDP, excelEstComm);
+					dao.updateWorkLog(ticket, getCurrentDateTime(), excelDP, excelEstComm, timeSpent);
 					
 
 				}else{
@@ -243,9 +243,13 @@ public class DailyReportImpl implements DailyReportIntf {
 				
 				//Fetch Comments from DB
 				JiraDTO jiraDB = new JiraDTO();
-				jiraDB = dao.getWorkLog(jira.getTicketNumber());
+				jiraDB = dao.getWorkLogDetails(jira.getTicketNumber());
 
 				Row row = sheet.createRow(++rowCount);
+				
+				//Fetch WorkLog Details from DB
+				List<String> worklogged = dao.getWorkLogForToday(jira.getTicketNumber());
+				String workLogSummary = generateSummaryWL(worklogged);
 				
 				createCell(workbook, jira.getTicketNumber(), row, 0);
 				createCell(workbook, jira.getSummary(), row, 1);
@@ -253,7 +257,7 @@ public class DailyReportImpl implements DailyReportIntf {
 				createCell(workbook, jira.getReporter(), row, 3);
 				createCell(workbook, jira.getStatus(), row, 4);
 				createCell(workbook, nullCheckString(jiraDB.getExcelComments()), row, 5);
-				createCell(workbook, "", row, 6);
+				createCell(workbook, checkEmptyLog(workLogSummary), row, 6);
 				createCell(workbook, jira.getEstimated(), row, 7);
 				createCell(workbook, jira.getRemaining(), row, 8);
 				createCell(workbook, nullCheckString(jiraDB.getExcelEstComments()), row, 9);
@@ -283,9 +287,24 @@ public class DailyReportImpl implements DailyReportIntf {
 	}
 	
 	
+	private String checkEmptyLog(String workLogSummary) {
+		return workLogSummary.equalsIgnoreCase("0m") ? "" : workLogSummary;
+	}
+
+	private String generateSummaryWL(List<String> worklogged) {
+		
+		int workLogSummary = 0;
+		
+		for(String timeSpent : worklogged){
+			workLogSummary = workLogSummary + convertToMinutes(timeSpent);
+		}
+		
+		return changeDisplayPattern(Integer.toString(workLogSummary));
+	}
+	
 	@Override
 	public JiraDTO getWorkLogDetails(String ticket) {
-		return dao.getWorkLog(ticket);
+		return dao.getWorkLogDetails(ticket);
 	}
 
 

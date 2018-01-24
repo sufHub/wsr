@@ -113,3 +113,7 @@ function logOut(){
 function generateExcel(){
 	window.location.href="/generateExcel";
 }
+
+function workLogToday(){
+	alert(1);
+}

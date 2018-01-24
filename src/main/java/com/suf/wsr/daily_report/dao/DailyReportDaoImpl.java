@@ -108,18 +108,19 @@ public class DailyReportDaoImpl implements DailyReportDao {
 	}
 
 	@Override
-	public void updateWorkLog(String ticket, String date, String excelDP, String excelEstComm) {
+	public void updateWorkLog(String ticket, String date, String excelDP, String excelEstComm, String timeSpent) {
 
-		String sql = "INSERT INTO WorkLogDetails (Key, Date, Comments, EstComments) "
-				+ "values (?,?,?,?)";
+		String sql = "INSERT INTO WorkLogDetails (Key, Date, Estimation, Comments, EstComments) "
+				+ "values (?,?,?,?,?)";
 
 		try (Connection conn = this.connect();
 				PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
 			pstmt.setString(1, ticket);
 			pstmt.setString(2, date);
-			pstmt.setString(3, excelDP);
-			pstmt.setString(4, excelEstComm);
+			pstmt.setString(3, timeSpent);
+			pstmt.setString(4, excelDP);
+			pstmt.setString(5, excelEstComm);
 			pstmt.executeUpdate();
 
 		} catch (SQLException e) {
@@ -130,9 +131,11 @@ public class DailyReportDaoImpl implements DailyReportDao {
 	}
 
 	@Override
-	public JiraDTO getWorkLog(String ticket) {
+	public JiraDTO getWorkLogDetails(String ticket) {
 		
 		JiraDTO jira = new JiraDTO();
+		
+		// order by Date desc limit 1 : to fetch the latest comments
 		
 		String sql = "select * from WorkLogDetails where Key = ? order by Date desc limit 1";
 
@@ -147,6 +150,7 @@ public class DailyReportDaoImpl implements DailyReportDao {
 				jira.setWorkLogDate(rs.getString("Date"));
 				jira.setExcelComments(rs.getString("Comments"));
 				jira.setExcelEstComments(rs.getString("EstComments"));
+				jira.setEstimated(rs.getString("Estimation"));
 			}
 
 		} catch (SQLException e) {
@@ -154,6 +158,30 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		}
 		
 		return jira;
+	}
+	
+	@Override
+	public List<String> getWorkLogForToday(String ticket) {
+		
+		List<String> workLogged = new ArrayList<String>();
+		
+		String sql = "select * from WorkLogDetails where Key = ? and date(Date) = date('now')";
+
+		try (Connection conn = this.connect();
+				PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+			pstmt.setString(1, ticket);
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				workLogged.add(rs.getString("Estimation"));
+			}
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		
+		return workLogged;
 	}
 
 }

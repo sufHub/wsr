@@ -15,10 +15,12 @@ public interface DailyReportDao {
 	
 	public List<JiraDTO> getAllTicket();
 
-	List<String> getAllTicketKeys();
+	public List<String> getAllTicketKeys();
 	
-	public void updateWorkLog(String ticket, String date, String excelDP, String excelEstComm);
+	public void updateWorkLog(String ticket, String date, String excelDP, String excelEstComm, String timeSpent);
 	
-	public JiraDTO getWorkLog(String ticket);
+	public JiraDTO getWorkLogDetails(String ticket);
+
+	public List<String> getWorkLogForToday(String ticket);
 
 }
