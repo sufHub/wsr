@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -73,6 +75,17 @@ public class DailyReportController {
 		ModelAndView view = new ModelAndView("popup");
 		view.addObject("comments", jira.getExcelComments());
 		view.addObject("estComments", jira.getExcelEstComments());
+		
+		return view;
+	}
+	
+	@RequestMapping("/workLogToday")
+	ModelAndView workLogToday() {
+		
+		Map<String, List<JiraDTO>> jira = dailyReport.getWorkLogToday();
+		
+		ModelAndView view = new ModelAndView("summary");
+		view.addObject("summary", jira);
 		
 		return view;
 	}

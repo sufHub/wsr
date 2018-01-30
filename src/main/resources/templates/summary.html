@@ -1,0 +1,39 @@
+
+<div style="margin-left: 15px;" th:each="element : ${summary}">
+	<br></br>
+	<div style="font-weight: bolder;" th:text="${element.Key}"></div>
+	<br></br>
+	<div style="margin-left: 15px; width: 94%;">
+
+		<table class="table table-hover" id="task-table">
+			<thead style="font-size: 15px;">
+				<tr>
+					<th>Issue #</th>
+					<th>Estimate</th>
+					<th>Reporter</th>
+					<th>Updated</th>
+				</tr>
+			</thead>
+			<tbody style="font-size: 13px;">
+				<tr th:each="jira : ${element.value}">
+					<td th:text="${jira.ticketNumber}">Issue #</td>
+					<td th:text="${jira.estimated}">Estimate</td>
+					<td th:text="${jira.reporter}">Reporter</td>
+					<td th:text="${jira.workLogDate}">Updated</td>
+				</tr>
+			</tbody>
+		</table>
+
+	</div>
+</div>
+
+<div th:if="${summary.isEmpty()}">
+	<br></br>
+	<span style="margin-left: 15px;">
+		<b>No WorkLogged for Today !!</b>
+	</span>
+	<br></br>
+	<br></br>
+	<span></span>
+</div>
+	

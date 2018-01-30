@@ -6,7 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
@@ -182,6 +184,42 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		}
 		
 		return workLogged;
+	}
+
+	public Map<String, List<JiraDTO>> getWorkLogToday() {
+		
+		Map<String, List<JiraDTO>> summary = new HashMap<>();
+		
+		String sql = "select work.Key, work.Estimation, ticket.Assignee, ticket.Reporter, work.Date from WorkLogDetails work, "
+				+ "TicketDetails ticket where date(Date) = date('now') and ticket.Key = work.Key";
+
+		try (Connection conn = this.connect();
+				PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				if(summary.containsKey(rs.getString("Assignee"))){
+					List<JiraDTO> assigneeList = summary.get(rs.getString("Assignee"));
+					populateMap(rs, assigneeList, summary);
+				}else{
+					populateMap(rs, new ArrayList<JiraDTO>(), summary);
+				}
+			}
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		}
+		return summary;
+	}
+
+	private void populateMap(ResultSet rs, List<JiraDTO> assigneeList, Map<String, List<JiraDTO>> summary) throws SQLException {
+		JiraDTO jira = new JiraDTO();
+		jira.setTicketNumber(rs.getString("Key"));
+		jira.setEstimated(rs.getString("Estimation"));
+		jira.setWorkLogDate(rs.getString("Date"));
+		jira.setReporter(rs.getString("Reporter"));
+		assigneeList.add(jira);
+		summary.put(rs.getString("Assignee"), assigneeList);
 	}
 
 }

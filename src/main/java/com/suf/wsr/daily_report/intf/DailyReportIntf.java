@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,6 +27,8 @@ public interface DailyReportIntf {
 	HttpServletResponse generateExcel(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException;
 
 	JiraDTO getWorkLogDetails(String ticket);
+
+	Map<String, List<JiraDTO>> getWorkLogToday();
 	
 
 }

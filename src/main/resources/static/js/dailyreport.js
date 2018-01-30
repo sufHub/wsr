@@ -115,5 +115,20 @@ function generateExcel(){
 }
 
 function workLogToday(){
-	alert(1);
+	
+	$.ajax({
+		url : "workLogToday"
+	}).then(
+			function(html_string) {
+				var dialog = bootbox.dialog({
+					title: 'Work Logged : ',
+					message: html_string,
+					buttons: {
+					ok: {
+					label: "Close",
+					className: 'btn btn-danger',
+					callback: function(){
+				}}}});
+			}
+			);
 }

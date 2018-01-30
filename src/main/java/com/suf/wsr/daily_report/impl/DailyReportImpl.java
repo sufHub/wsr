@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -95,38 +96,38 @@ public class DailyReportImpl implements DailyReportIntf {
 		List<String> dbTicketList = dao.getAllTicketKeys();
 		List<JiraDTO> notInDbList = new ArrayList<JiraDTO>();
  
-		for (BasicIssue issue : results.get().getIssues()) {
-			JiraDTO jira = new JiraDTO();
-			String key = issue.getKey();
-			Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
-
-			jira.setTicketNumber(ticket.getKey());
-			
-			jira.setAssignee(validate(ticket, "assignee"));
-			jira.setReporter(validate(ticket, "reporter"));
-			jira.setResolution(validate(ticket, "resoultion"));
-			jira.setStatus(validate(ticket, "status"));
-			jira.setSummary(validate(ticket, "summary"));
-
-			jira.setEstimated(changeDisplayPattern(validate(ticket, "estimated")));
-			jira.setLogged(changeDisplayPattern(validate(ticket, "logged")));
-			jira.setRemaining(changeDisplayPattern(validate(ticket, "remaining")));
-
-			jira.setComponents(nullCheckString(ticket.getComponents().toString()));
-			jira.setDescription(nullCheckString(ticket.getDescription()));
-			jira.setLabels(nullCheckString(ticket.getLabels().toString()));
-			jira.setPriority(nullCheckString(ticket.getPriority().getName()));
-			jira.setType(nullCheckString(ticket.getIssueType().getName()));
-
-			jira.setCreated(removeTimeZone(nullCheckString(ticket.getCreationDate().toString())));
-			jira.setUpdated(removeTimeZone(nullCheckString(ticket.getUpdateDate().toString())));
-
-			ticketList.add(jira);
-			
-			if(!dbTicketList.contains(ticket.getKey())){
-				notInDbList.add(jira);
-			}
-		}
+//		for (BasicIssue issue : results.get().getIssues()) {
+//			JiraDTO jira = new JiraDTO();
+//			String key = issue.getKey();
+//			Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
+//
+//			jira.setTicketNumber(ticket.getKey());
+//			
+//			jira.setAssignee(validate(ticket, "assignee"));
+//			jira.setReporter(validate(ticket, "reporter"));
+//			jira.setResolution(validate(ticket, "resoultion"));
+//			jira.setStatus(validate(ticket, "status"));
+//			jira.setSummary(validate(ticket, "summary"));
+//
+//			jira.setEstimated(changeDisplayPattern(validate(ticket, "estimated")));
+//			jira.setLogged(changeDisplayPattern(validate(ticket, "logged")));
+//			jira.setRemaining(changeDisplayPattern(validate(ticket, "remaining")));
+//
+//			jira.setComponents(nullCheckString(ticket.getComponents().toString()));
+//			jira.setDescription(nullCheckString(ticket.getDescription()));
+//			jira.setLabels(nullCheckString(ticket.getLabels().toString()));
+//			jira.setPriority(nullCheckString(ticket.getPriority().getName()));
+//			jira.setType(nullCheckString(ticket.getIssueType().getName()));
+//
+//			jira.setCreated(removeTimeZone(nullCheckString(ticket.getCreationDate().toString())));
+//			jira.setUpdated(removeTimeZone(nullCheckString(ticket.getUpdateDate().toString())));
+//
+//			ticketList.add(jira);
+//			
+//			if(!dbTicketList.contains(ticket.getKey())){
+//				notInDbList.add(jira);
+//			}
+//		}
 		
 		// Adding the tickets in DB
 		if(!notInDbList.isEmpty())
@@ -305,6 +306,11 @@ public class DailyReportImpl implements DailyReportIntf {
 	@Override
 	public JiraDTO getWorkLogDetails(String ticket) {
 		return dao.getWorkLogDetails(ticket);
+	}
+	
+	@Override
+	public Map<String, List<JiraDTO>> getWorkLogToday() {
+		return dao.getWorkLogToday();
 	}
 
 
