@@ -116,7 +116,7 @@
 <!-- 										<td th:text="${jira.labels}">labels</td> -->
 										<td th:text="${jira.priority}">Priority</td>
 <!-- 										<td th:text="${jira.type}">type</td> -->
-										<td><a onclick="javaScript:logWork(this)" href="javascript:void(0);"  ><img th:id="${jira.ticketNumber}" src="img/clock.png" alt="Log Work" style="width:30px" /></a></td>
+										<td><a onclick="javaScript:logWork(this)" href="javascript:void(0);" th:id="${jira.ticketNumber}"  ><img th:id="${jira.ticketNumber}" src="img/clock.png" alt="Log Work" style="width:30px" /></a></td>
 										
 									</tr>
 								</tbody>

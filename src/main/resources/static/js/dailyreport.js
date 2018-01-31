@@ -21,6 +21,8 @@ function login(){
 
 function logWork(obj){
 	
+	var ticket = obj.id;
+	
 	$.ajax({
 		url : "popup",
 		data : {
@@ -30,7 +32,7 @@ function logWork(obj){
 			function(html_string) {
 
 				var dialog = bootbox.dialog({
-					title: 'Work Log for Ticket : '+obj.id,
+					title: 'Work Log for Ticket : '+ticket,
 					message: html_string,
 					buttons: {
 					ok: {
@@ -63,7 +65,7 @@ function logWork(obj){
 						comments : $("#comments").val(),
 						excelDP : $("#excelDP").val(),
 						excelEstComm : $("#excelEstComm").val(),
-						ticket : obj.id
+						ticket : ticket
 					}
 					}).then(
 							function(data) {
