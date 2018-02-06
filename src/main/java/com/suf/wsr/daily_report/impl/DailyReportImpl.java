@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -34,6 +35,7 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.Worklog;
 import com.atlassian.jira.rest.client.api.domain.input.WorklogInput;
 import com.atlassian.jira.rest.client.api.domain.input.WorklogInputBuilder;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
@@ -50,7 +52,7 @@ public class DailyReportImpl implements DailyReportIntf {
 	private static final String FILE_EXT = ".xlsx";
 
 	private static final Logger LOGGER = Logger.getLogger(DailyReportImpl.class);
-	
+
 	@Autowired
 	DailyReportDaoImpl dao;
 
@@ -92,17 +94,22 @@ public class DailyReportImpl implements DailyReportIntf {
 		// TODO : Update the JQL
 
 		List<JiraDTO> ticketList = new ArrayList<JiraDTO>();
-		
+
 		List<String> dbTicketList = dao.getAllTicketKeys();
 		List<JiraDTO> notInDbList = new ArrayList<JiraDTO>();
- 
+
 		for (BasicIssue issue : results.get().getIssues()) {
 			JiraDTO jira = new JiraDTO();
 			String key = issue.getKey();
 			Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
 
+			Iterable<Worklog> worklog = ticket.getWorklogs();
+			for(Worklog logged : worklog){
+				LOGGER.debug(logged);
+			}
+
 			jira.setTicketNumber(ticket.getKey());
-			
+
 			jira.setAssignee(validate(ticket, "assignee"));
 			jira.setReporter(validate(ticket, "reporter"));
 			jira.setResolution(validate(ticket, "resoultion"));
@@ -123,15 +130,15 @@ public class DailyReportImpl implements DailyReportIntf {
 			jira.setUpdated(removeTimeZone(nullCheckString(ticket.getUpdateDate().toString())));
 
 			ticketList.add(jira);
-			
+
 			if(!dbTicketList.contains(ticket.getKey())){
 				notInDbList.add(jira);
 			}
 		}
-		
+
 		// Adding the tickets in DB
 		if(!notInDbList.isEmpty())
-		dao.addTicket(notInDbList);
+			dao.addTicket(notInDbList);
 
 		return ticketList;
 	}
@@ -175,11 +182,11 @@ public class DailyReportImpl implements DailyReportIntf {
 					}
 
 					jiraClient.getIssueClient().addWorklog(issue.getWorklogUri(), worklogInput);
-					
+
 					// Add work logged in DB
-					
+
 					dao.updateWorkLog(ticket, getCurrentDateTime(), excelDP, excelEstComm, timeSpent);
-					
+
 
 				}else{
 					returns = "invalidTime"; 
@@ -193,7 +200,7 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 		return returns;
 	}
-	
+
 	private String getCurrentDateTime() {
 		LocalDateTime now = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
@@ -242,17 +249,17 @@ public class DailyReportImpl implements DailyReportIntf {
 
 			rowCount = 0;
 			for(JiraDTO jira : tickets){
-				
+
 				//Fetch Comments from DB
 				JiraDTO jiraDB = new JiraDTO();
 				jiraDB = dao.getWorkLogDetails(jira.getTicketNumber());
 
 				Row row = sheet.createRow(++rowCount);
-				
+
 				//Fetch WorkLog Details from DB
 				List<String> worklogged = dao.getWorkLogForToday(jira.getTicketNumber());
 				String workLogSummary = generateSummaryWL(worklogged);
-				
+
 				createCell(workbook, jira.getTicketNumber(), row, 0);
 				createCell(workbook, jira.getSummary(), row, 1);
 				createCell(workbook, jira.getAssignee(), row, 2);
@@ -287,33 +294,86 @@ public class DailyReportImpl implements DailyReportIntf {
 
 		return response;
 	}
-	
-	
+
+
 	private String checkEmptyLog(String workLogSummary) {
 		return workLogSummary.equalsIgnoreCase("0m") ? "" : workLogSummary;
 	}
 
 	private String generateSummaryWL(List<String> worklogged) {
-		
+
 		int workLogSummary = 0;
-		
+
 		for(String timeSpent : worklogged){
 			workLogSummary = workLogSummary + convertToMinutes(timeSpent);
 		}
-		
+
 		return changeDisplayPattern(Integer.toString(workLogSummary));
 	}
-	
+
 	@Override
 	public JiraDTO getWorkLogDetails(String ticket) {
 		return dao.getWorkLogDetails(ticket);
 	}
-	
+
 	@Override
-	public Map<String, List<JiraDTO>> getWorkLogToday() {
-		return dao.getWorkLogToday();
+	public Map<String, List<JiraDTO>> getWorkLogToday(HttpServletRequest request, HttpServletResponse response) {
+
+		String username = (String) request.getSession().getAttribute("username");
+		String password = (String) request.getSession().getAttribute("password");
+		Map<String, List<JiraDTO>> summary = new HashMap<>();
+
+		if(username == null){
+			return null;
+		}else{
+			try{
+				JiraRestClient jiraClient = getJiraClient(username, password, request);
+
+				Promise<SearchResult> results = jiraClient.getSearchClient().searchJql(
+						"assignee in (UMMERFAS, RIZWANS, BASKARS2) AND Sprint in openSprints() AND worklogDate  = "+getTodaysDate());
+
+				for (BasicIssue issue : results.get().getIssues()) {
+
+					String key = issue.getKey();
+					Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
+					Iterable<Worklog> worklog = ticket.getWorklogs();
+					
+					for(Worklog logged : worklog){
+						
+						if(logged.getCreationDate().toString().startsWith(getTodaysDate())){
+							
+							String minutesSpent = Integer.toString(logged.getMinutesSpent());
+							if(summary.containsKey(ticket.getAssignee().getDisplayName())){
+								List<JiraDTO> assigneeList = summary.get(ticket.getAssignee().getDisplayName());
+								populateMap(ticket, assigneeList, summary, minutesSpent);
+							}else{
+								populateMap(ticket, new ArrayList<JiraDTO>(), summary, minutesSpent);
+							}
+						}
+					}
+				}
+			} catch (URISyntaxException | InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+			}
+		}
+		return summary;
 	}
 
+
+	private void populateMap(Issue ticket, List<JiraDTO> assigneeList, Map<String, List<JiraDTO>> summary, String minutesSpent) {
+		
+		JiraDTO jira = new JiraDTO();
+		jira.setTicketNumber(ticket.getKey());
+		jira.setAssignee(validate(ticket, "assignee"));
+		jira.setReporter(validate(ticket, "reporter"));
+		jira.setResolution(validate(ticket, "resoultion"));
+		jira.setStatus(validate(ticket, "status"));
+		jira.setSummary(validate(ticket, "summary"));
+		jira.setWorkLogDate(removeTimeZone(ticket.getUpdateDate().toString()));
+		jira.setEstimated(changeDisplayPattern(minutesSpent));
+		assigneeList.add(jira);
+		summary.put(jira.getAssignee(), assigneeList);
+	}
 
 	private String validateJiraTimeStr(String test) {
 
@@ -536,6 +596,12 @@ public class DailyReportImpl implements DailyReportIntf {
 
 	private String removeTimeZone(String time) {
 		return time.replace(".000+05:30", "").replace("T", " ");
+	}
+	
+	private String getTodaysDate() {
+		LocalDateTime now = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd");
+		return now.format(formatter);
 	}
 
 

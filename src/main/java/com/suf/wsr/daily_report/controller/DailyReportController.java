@@ -80,9 +80,9 @@ public class DailyReportController {
 	}
 	
 	@RequestMapping("/workLogToday")
-	ModelAndView workLogToday() {
+	ModelAndView workLogToday(HttpServletRequest request,HttpServletResponse response) {
 		
-		Map<String, List<JiraDTO>> jira = dailyReport.getWorkLogToday();
+		Map<String, List<JiraDTO>> jira = dailyReport.getWorkLogToday(request, response);
 		
 		ModelAndView view = new ModelAndView("summary");
 		view.addObject("summary", jira);

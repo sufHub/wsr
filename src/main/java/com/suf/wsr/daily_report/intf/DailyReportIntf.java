@@ -28,7 +28,7 @@ public interface DailyReportIntf {
 
 	JiraDTO getWorkLogDetails(String ticket);
 
-	Map<String, List<JiraDTO>> getWorkLogToday();
+	Map<String, List<JiraDTO>> getWorkLogToday(HttpServletRequest request, HttpServletResponse response);
 	
 
 }
