@@ -1,5 +1,14 @@
 package com.suf.wsr.daily_report.controller;
 
+import java.util.List;
+
+/**
+ * DTO class for the JIRA instance fields
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
 public class JiraDTO {
 	
 	private String ticketNumber;
@@ -24,6 +33,8 @@ public class JiraDTO {
 	private String excelEstComments;
 	private String workLogComments;
 	private String workLogDate;
+	
+	private List<WorkLogDTO> workLogged;
 	
 	
 	public String getTicketNumber() {
@@ -152,9 +163,11 @@ public class JiraDTO {
 	public void setWorkLogDate(String workLogDate) {
 		this.workLogDate = workLogDate;
 	}
+	public List<WorkLogDTO> getWorkLogged() {
+		return workLogged;
+	}
+	public void setWorkLogged(List<WorkLogDTO> workLogged) {
+		this.workLogged = workLogged;
+	}
  
-	
-	
-	
-
 }

@@ -1,5 +1,12 @@
 package com.suf.wsr.daily_report.intf;
 
+/**
+ * Exception Wrapper class
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
 public class DailyReportException extends Exception{
 
 	private static final long serialVersionUID = 1L;

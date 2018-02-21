@@ -1,5 +1,12 @@
 package com.suf.wsr.daily_report.dao;
 
+/**
+ * DTO class for JIRA DB fields
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
 public class TicketDTO {
 	
 	private String key;

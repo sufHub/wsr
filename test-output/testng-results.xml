@@ -1,16 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results skipped="0" failed="0" ignored="1" total="2" passed="1">
+<testng-results skipped="0" failed="0" ignored="0" total="2" passed="2">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="9139" started-at="2018-01-11T06:24:11Z" finished-at="2018-01-11T06:24:21Z">
+  <suite name="Default suite" duration-ms="18433" started-at="2018-02-21T06:00:11Z" finished-at="2018-02-21T06:00:29Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="9139" started-at="2018-01-11T06:24:11Z" finished-at="2018-01-11T06:24:21Z">
+    <test name="Default test" duration-ms="18433" started-at="2018-02-21T06:00:11Z" finished-at="2018-02-21T06:00:29Z">
       <class name="com.suf.wsr.daily_report.DailyReportApplicationTest">
-        <test-method status="PASS" signature="getTicketsTest()[pri:0, instance:com.suf.wsr.daily_report.DailyReportApplicationTest@1494225]" name="getTicketsTest" duration-ms="9016" started-at="2018-01-11T11:54:12Z" finished-at="2018-01-11T11:54:21Z">
+        <test-method status="PASS" signature="getTicketsTest()[pri:0, instance:com.suf.wsr.daily_report.DailyReportApplicationTest@13379b4]" name="getTicketsTest" duration-ms="14817" started-at="2018-02-21T11:30:11Z" finished-at="2018-02-21T11:30:26Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- getTicketsTest -->
+        <test-method status="PASS" signature="insertTest()[pri:0, instance:com.suf.wsr.daily_report.DailyReportApplicationTest@13379b4]" name="insertTest" duration-ms="3576" started-at="2018-02-21T11:30:26Z" finished-at="2018-02-21T11:30:29Z">
+          <reporter-output>
+          </reporter-output>
+        </test-method> <!-- insertTest -->
       </class> <!-- com.suf.wsr.daily_report.DailyReportApplicationTest -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->

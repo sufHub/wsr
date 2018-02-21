@@ -10,18 +10,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
-
 import com.suf.wsr.daily_report.controller.JiraDTO;
 
-@Component
+
+/**
+ * Implementation Class for the interface DailyReportDao
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
 public class DailyReportDaoImpl implements DailyReportDao {
+	
+	private String dbConnection;
+
+	public DailyReportDaoImpl(String dbConnection) {
+		this.dbConnection = dbConnection;
+	}
 
 	@Override
 	public Connection connect() {
-		// SQLite connection string
-		String dbFile = "D:\\SQLiteStudio\\DailyReport";
-		String url = "jdbc:sqlite:"+dbFile;
+		String url = dbConnection;
 		Connection conn = null;
 		try {
 			conn = DriverManager.getConnection(url);
@@ -38,7 +47,6 @@ public class DailyReportDaoImpl implements DailyReportDao {
 				+ "values (?,?,?)";
 
 		for(JiraDTO ticket : dto){
-
 			try (Connection conn = this.connect();
 					PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -50,9 +58,7 @@ public class DailyReportDaoImpl implements DailyReportDao {
 			} catch (SQLException e) {
 				System.out.println(e.getMessage());
 			}
-
 		}
-
 	}
 
 	@Override
@@ -85,7 +91,6 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		return list;
 
 	}
-
 
 	@Override
 	public List<String> getAllTicketKeys() {
@@ -185,7 +190,14 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		
 		return workLogged;
 	}
-
+	
+	/**
+	 * Get WorkLogged from DB
+	 * No more used as details fetched by
+	 * JIRA REST CALL
+	 * 
+	 * @return Map<String, List<JiraDTO>>
+	 */
 	public Map<String, List<JiraDTO>> getWorkLogToday() {
 		
 		Map<String, List<JiraDTO>> summary = new HashMap<>();
@@ -212,6 +224,15 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		return summary;
 	}
 
+	/**
+	 * Utility method.
+	 * 
+	 * @param rs
+	 * @param assigneeList
+	 * @param summary
+	 * @throws SQLException
+	 */
+	
 	private void populateMap(ResultSet rs, List<JiraDTO> assigneeList, Map<String, List<JiraDTO>> summary) throws SQLException {
 		JiraDTO jira = new JiraDTO();
 		jira.setTicketNumber(rs.getString("Key"));
@@ -220,6 +241,14 @@ public class DailyReportDaoImpl implements DailyReportDao {
 		jira.setReporter(rs.getString("Reporter"));
 		assigneeList.add(jira);
 		summary.put(rs.getString("Assignee"), assigneeList);
+	}
+
+	public String getDbLocation() {
+		return dbConnection;
+	}
+
+	public void setDbLocation(String dbConnection) {
+		this.dbConnection = dbConnection;
 	}
 
 }

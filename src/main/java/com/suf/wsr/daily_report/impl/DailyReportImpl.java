@@ -27,6 +27,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Import;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -40,21 +41,40 @@ import com.atlassian.jira.rest.client.api.domain.input.WorklogInput;
 import com.atlassian.jira.rest.client.api.domain.input.WorklogInputBuilder;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.atlassian.util.concurrent.Promise;
+import com.suf.wsr.daily_report.DailyReportConfiguration;
 import com.suf.wsr.daily_report.controller.JiraDTO;
+import com.suf.wsr.daily_report.controller.WorkLogDTO;
+import com.suf.wsr.daily_report.dao.DailyReportDao;
 import com.suf.wsr.daily_report.dao.DailyReportDaoImpl;
 import com.suf.wsr.daily_report.intf.DailyReportException;
 import com.suf.wsr.daily_report.intf.DailyReportIntf;
 
-@Import(value = { DailyReportDaoImpl.class })
+/**
+ * Implementation class for the interface DailyReportIntf
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
+@Import(value = { DailyReportDaoImpl.class, DailyReportConfiguration.class })
 public class DailyReportImpl implements DailyReportIntf {
 
 	private static final String FILE_NAME = "DailyReport";
 	private static final String FILE_EXT = ".xlsx";
-
 	private static final Logger LOGGER = Logger.getLogger(DailyReportImpl.class);
+	
+	private String jiraUrl;
+	private String query;
+	private String workLogQuery;
 
 	@Autowired
-	DailyReportDaoImpl dao;
+	public @Qualifier(value = "dailyDaoBean") DailyReportDao dao;
+
+	public DailyReportImpl(String jiraUrl, String query, String workLogQuery) {
+		this.jiraUrl = jiraUrl;
+		this.query = query;
+		this.workLogQuery = workLogQuery;
+	}
 
 	@Override
 	public List<String> getTickets(String username, String password) {
@@ -69,7 +89,7 @@ public class DailyReportImpl implements DailyReportIntf {
 
 		URI jiraServerUri = null;
 		try {
-			jiraServerUri = new URI("http://jira.lexisnexis.fr/");
+			jiraServerUri = new URI(jiraUrl);
 			JiraRestClient restClient = restClientFactory.createWithBasicHttpAuthentication(jiraServerUri, username,
 					password);
 			jiraUserName = restClient.getSessionClient().getCurrentSession().get().getUsername();
@@ -88,10 +108,7 @@ public class DailyReportImpl implements DailyReportIntf {
 
 		JiraRestClient jiraClient = getJiraClient(username, password, request);
 
-		Promise<SearchResult> results = jiraClient.getSearchClient().searchJql(
-				"assignee in (UMMERFAS, RIZWANS, BASKARS2) AND Sprint in openSprints() ORDER BY assignee ASC, status ASC");
-		// "assignee in (UMMERFAS) and key = 'BO-1428'");
-		// TODO : Update the JQL
+		Promise<SearchResult> results = jiraClient.getSearchClient().searchJql(query);
 
 		List<JiraDTO> ticketList = new ArrayList<JiraDTO>();
 
@@ -103,12 +120,18 @@ public class DailyReportImpl implements DailyReportIntf {
 			String key = issue.getKey();
 			Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
 
+			List<WorkLogDTO> workLogged = new ArrayList<WorkLogDTO>();
 			Iterable<Worklog> worklog = ticket.getWorklogs();
-			for(Worklog logged : worklog){
-				LOGGER.debug(logged);
+
+			for (Worklog logged : worklog) {
+				WorkLogDTO dto = new WorkLogDTO();
+				dto.setTimeSpent(Integer.toString(logged.getMinutesSpent()));
+				dto.setWorkLoggedDate(logged.getStartDate().toString());
+				workLogged.add(dto);
 			}
 
 			jira.setTicketNumber(ticket.getKey());
+			jira.setWorkLogged(workLogged);
 
 			jira.setAssignee(validate(ticket, "assignee"));
 			jira.setReporter(validate(ticket, "reporter"));
@@ -131,13 +154,13 @@ public class DailyReportImpl implements DailyReportIntf {
 
 			ticketList.add(jira);
 
-			if(!dbTicketList.contains(ticket.getKey())){
+			if (!dbTicketList.contains(ticket.getKey())) {
 				notInDbList.add(jira);
 			}
 		}
 
 		// Adding the tickets in DB
-		if(!notInDbList.isEmpty())
+		if (!notInDbList.isEmpty())
 			dao.addTicket(notInDbList);
 
 		return ticketList;
@@ -162,19 +185,19 @@ public class DailyReportImpl implements DailyReportIntf {
 				String jiraTimeCheck = "invalid";
 
 				jiraTimeCheck = validateJiraTimeStr(timeSpent);
-				if(!remainingEst.equals("auto")){
-					jiraTimeCheck =  validateJiraTimeStr(manualEst);
+				if (!remainingEst.equals("auto")) {
+					jiraTimeCheck = validateJiraTimeStr(manualEst);
 				}
 
-				if(jiraTimeCheck.equals("valid")){
+				if (jiraTimeCheck.equals("valid")) {
 
 					JiraRestClient jiraClient = getJiraClient(username, password, request);
 					final Issue issue = jiraClient.getIssueClient().getIssue(ticket).get();
 
 					if (remainingEst.equals("auto")) {
 						worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
-								.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent)).setAdjustEstimateAuto()
-								.build();
+								.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent))
+								.setAdjustEstimateAuto().build();
 					} else {
 						worklogInput = new WorklogInputBuilder(issue.getSelf()).setStartDate(new DateTime())
 								.setComment(comments).setMinutesSpent(convertToMinutes(timeSpent))
@@ -187,9 +210,8 @@ public class DailyReportImpl implements DailyReportIntf {
 
 					dao.updateWorkLog(ticket, getCurrentDateTime(), excelDP, excelEstComm, timeSpent);
 
-
-				}else{
-					returns = "invalidTime"; 
+				} else {
+					returns = "invalidTime";
 				}
 
 			}
@@ -201,6 +223,11 @@ public class DailyReportImpl implements DailyReportIntf {
 		return returns;
 	}
 
+	/**
+	 * Utility to get the current Date Time
+	 * @return String
+	 */
+
 	private String getCurrentDateTime() {
 		LocalDateTime now = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss");
@@ -209,9 +236,10 @@ public class DailyReportImpl implements DailyReportIntf {
 	}
 
 	@Override
-	public HttpServletResponse generateExcel(HttpServletRequest request, HttpServletResponse response) throws FileNotFoundException, IOException {
+	public HttpServletResponse generateExcel(HttpServletRequest request, HttpServletResponse response)
+			throws FileNotFoundException, IOException {
 
-		File file = new File(FILE_NAME+FILE_EXT);
+		File file = new File(FILE_NAME + FILE_EXT);
 		file.delete();
 
 		XSSFWorkbook workbook = new XSSFWorkbook();
@@ -226,8 +254,10 @@ public class DailyReportImpl implements DailyReportIntf {
 
 			System.out.println("Creating excel");
 
-			String[] headers = new String[] {"Ticket", "Summary","Assignee","Reporter","Status","Points to be discussed","Work Logged on Current","Planned Duration","Remaining Estaimation","Estimation Comments","Target Date"};
-			int noOfColumns = headers.length-1;
+			String[] headers = new String[] { "Ticket", "Summary", "Assignee", "Reporter", "Status",
+					"Points to be discussed", "Work Logged on Current", "Planned Duration", "Remaining Estaimation",
+					"Estimation Comments", "Target Date" };
+			int noOfColumns = headers.length - 1;
 			int rowCount = 0;
 
 			Row rowZero = sheet.createRow(rowCount++);
@@ -239,8 +269,8 @@ public class DailyReportImpl implements DailyReportIntf {
 				Cell cell = rowZero.createCell(col);
 				rowZero.setHeightInPoints(50);
 				cell.setCellValue(headers[col]);
-				style.setWrapText(true); //Set wordwrap
-				style.setBorderTop(BorderStyle.THIN );
+				style.setWrapText(true); // Set wordwrap
+				style.setBorderTop(BorderStyle.THIN);
 				style.setBorderBottom(BorderStyle.THIN);
 				style.setBorderLeft(BorderStyle.THIN);
 				style.setBorderRight(BorderStyle.THIN);
@@ -248,17 +278,15 @@ public class DailyReportImpl implements DailyReportIntf {
 			}
 
 			rowCount = 0;
-			for(JiraDTO jira : tickets){
+			for (JiraDTO jira : tickets) {
 
-				//Fetch Comments from DB
+				// Fetch Comments from DB
 				JiraDTO jiraDB = new JiraDTO();
 				jiraDB = dao.getWorkLogDetails(jira.getTicketNumber());
 
 				Row row = sheet.createRow(++rowCount);
 
-				//Fetch WorkLog Details from DB
-				List<String> worklogged = dao.getWorkLogForToday(jira.getTicketNumber());
-				String workLogSummary = generateSummaryWL(worklogged);
+				String workLogSummary = getTodaysWorkLog(jira);
 
 				createCell(workbook, jira.getTicketNumber(), row, 0);
 				createCell(workbook, jira.getSummary(), row, 1);
@@ -277,7 +305,7 @@ public class DailyReportImpl implements DailyReportIntf {
 			alignSheet(sheet);
 
 			try {
-				FileOutputStream outputStream = new FileOutputStream(FILE_NAME+FILE_EXT);
+				FileOutputStream outputStream = new FileOutputStream(FILE_NAME + FILE_EXT);
 				workbook.write(outputStream);
 				workbook.close();
 			} catch (FileNotFoundException e) {
@@ -295,17 +323,49 @@ public class DailyReportImpl implements DailyReportIntf {
 		return response;
 	}
 
+	/**
+	 * Gets the JIRA object and calculates the total work logged for the 
+	 * particular ticket for the day
+	 * 
+	 * @param jira
+	 * @return String
+	 */
+
+	private String getTodaysWorkLog(JiraDTO jira) {
+
+		List<WorkLogDTO> worklog = jira.getWorkLogged();
+		List<String> workLogged = new ArrayList<String>();
+
+		for (WorkLogDTO logged : worklog) {
+			if (logged.getWorkLoggedDate().toString().startsWith(getTodaysDate()))
+				workLogged.add(logged.getTimeSpent());
+		}
+
+		return generateSummaryWL(workLogged);
+	}
+
+	/**
+	 * Utility method
+	 * @param workLogSummary
+	 * @return String
+	 */
 
 	private String checkEmptyLog(String workLogSummary) {
 		return workLogSummary.equalsIgnoreCase("0m") ? "" : workLogSummary;
 	}
 
+	/**
+	 * Utility method
+	 * @param worklogged
+	 * @return String
+	 */
+
 	private String generateSummaryWL(List<String> worklogged) {
 
 		int workLogSummary = 0;
 
-		for(String timeSpent : worklogged){
-			workLogSummary = workLogSummary + convertToMinutes(timeSpent);
+		for (String timeSpent : worklogged) {
+			workLogSummary = workLogSummary + Integer.parseInt(timeSpent);
 		}
 
 		return changeDisplayPattern(Integer.toString(workLogSummary));
@@ -323,31 +383,31 @@ public class DailyReportImpl implements DailyReportIntf {
 		String password = (String) request.getSession().getAttribute("password");
 		Map<String, List<JiraDTO>> summary = new HashMap<>();
 
-		if(username == null){
+		if (username == null) {
 			return null;
-		}else{
-			try{
+		} else {
+			try {
 				JiraRestClient jiraClient = getJiraClient(username, password, request);
 
-				Promise<SearchResult> results = jiraClient.getSearchClient().searchJql(
-						"assignee in (UMMERFAS, RIZWANS, BASKARS2) AND Sprint in openSprints() AND worklogDate  = "+getTodaysDate());
+				Promise<SearchResult> results = jiraClient.getSearchClient().searchJql( workLogQuery + getTodaysDate());
 
 				for (BasicIssue issue : results.get().getIssues()) {
 
 					String key = issue.getKey();
 					Issue ticket = jiraClient.getIssueClient().getIssue(key).get();
 					Iterable<Worklog> worklog = ticket.getWorklogs();
-					
-					for(Worklog logged : worklog){
-						
-						if(logged.getCreationDate().toString().startsWith(getTodaysDate())){
-							
+
+					for (Worklog logged : worklog) {
+
+						if (logged.getStartDate().toString().startsWith(getTodaysDate())) {
 							String minutesSpent = Integer.toString(logged.getMinutesSpent());
-							if(summary.containsKey(ticket.getAssignee().getDisplayName())){
+							if (summary.containsKey(ticket.getAssignee().getDisplayName())) {
 								List<JiraDTO> assigneeList = summary.get(ticket.getAssignee().getDisplayName());
-								populateMap(ticket, assigneeList, summary, minutesSpent);
-							}else{
-								populateMap(ticket, new ArrayList<JiraDTO>(), summary, minutesSpent);
+								populateMap(ticket, assigneeList, summary, minutesSpent,
+										logged.getUpdateDate().toString());
+							} else {
+								populateMap(ticket, new ArrayList<JiraDTO>(), summary, minutesSpent,
+										logged.getUpdateDate().toString());
 							}
 						}
 					}
@@ -359,9 +419,19 @@ public class DailyReportImpl implements DailyReportIntf {
 		return summary;
 	}
 
+	/**
+	 * Utility method
+	 * 
+	 * @param ticket
+	 * @param assigneeList
+	 * @param summary
+	 * @param minutesSpent
+	 * @param updated
+	 */
 
-	private void populateMap(Issue ticket, List<JiraDTO> assigneeList, Map<String, List<JiraDTO>> summary, String minutesSpent) {
-		
+	private void populateMap(Issue ticket, List<JiraDTO> assigneeList, Map<String, List<JiraDTO>> summary,
+			String minutesSpent, String updated) {
+
 		JiraDTO jira = new JiraDTO();
 		jira.setTicketNumber(ticket.getKey());
 		jira.setAssignee(validate(ticket, "assignee"));
@@ -369,11 +439,17 @@ public class DailyReportImpl implements DailyReportIntf {
 		jira.setResolution(validate(ticket, "resoultion"));
 		jira.setStatus(validate(ticket, "status"));
 		jira.setSummary(validate(ticket, "summary"));
-		jira.setWorkLogDate(removeTimeZone(ticket.getUpdateDate().toString()));
+		jira.setWorkLogDate(removeTimeZone(updated));
 		jira.setEstimated(changeDisplayPattern(minutesSpent));
 		assigneeList.add(jira);
 		summary.put(jira.getAssignee(), assigneeList);
 	}
+
+	/**
+	 * Utility method
+	 * @param test
+	 * @return
+	 */
 
 	private String validateJiraTimeStr(String test) {
 
@@ -385,17 +461,16 @@ public class DailyReportImpl implements DailyReportIntf {
 
 		String ret = "invalid";
 		String[] testArr = test.trim().split(" ");
-		for(String t : testArr){
-			if(t.length() >=2 && checkNumeric(t.substring(0, t.length()-1)) ){
-				if(charList.contains(Character.toString(t.charAt(t.length()-1)).toLowerCase())){
-					charList.remove(Character.toString(t.charAt(t.length()-1)));
-					ret =  "valid";
-				}else
-				{
+		for (String t : testArr) {
+			if (t.length() >= 2 && checkNumeric(t.substring(0, t.length() - 1))) {
+				if (charList.contains(Character.toString(t.charAt(t.length() - 1)).toLowerCase())) {
+					charList.remove(Character.toString(t.charAt(t.length() - 1)));
+					ret = "valid";
+				} else {
 					ret = "invalid";
 					break;
 				}
-			}else{
+			} else {
 				ret = "invalid";
 				break;
 			}
@@ -404,10 +479,21 @@ public class DailyReportImpl implements DailyReportIntf {
 		return ret;
 	}
 
+	/**
+	 * Utility method
+	 * @param substring
+	 * @return boolean
+	 */
+
 	private static boolean checkNumeric(String substring) {
-		boolean isNumeric = substring.chars().allMatch( Character::isDigit );
+		boolean isNumeric = substring.chars().allMatch(Character::isDigit);
 		return isNumeric;
 	}
+
+	/**
+	 * Utility method
+	 * @param sheet
+	 */
 
 	private void alignSheet(XSSFSheet sheet) {
 		sheet.setColumnWidth(0, 3000);
@@ -425,23 +511,49 @@ public class DailyReportImpl implements DailyReportIntf {
 		sheet.setZoom(85);
 	}
 
+	/**
+	 * Utility method
+	 * @param workbook
+	 * @param content
+	 * @param row
+	 * @param position
+	 */
+
 	private void createCell(XSSFWorkbook workbook, String content, Row row, int position) {
 		Cell cell = row.createCell(position);
 		textWrap(workbook, content, cell);
 		cell.setCellValue(content);
 	}
 
+	/**
+	 * Utility method
+	 * @param workbook
+	 * @param jira
+	 * @param cell
+	 */
+
 	private void textWrap(XSSFWorkbook workbook, String jira, Cell cell) {
 		CellStyle styles = workbook.createCellStyle();
-		styles.setBorderTop(BorderStyle.THIN );
+		styles.setBorderTop(BorderStyle.THIN);
 		styles.setBorderBottom(BorderStyle.THIN);
 		styles.setBorderLeft(BorderStyle.THIN);
 		styles.setBorderRight(BorderStyle.THIN);
-		if(jira.length() > 50){
+		if (jira.length() > 50) {
 			styles.setWrapText(true);
 		}
-		cell.setCellStyle(styles); 
+		cell.setCellStyle(styles);
 	}
+
+	/**
+	 * Utility method
+	 * @param username
+	 * @param password
+	 * @param request
+	 * @return JiraRestClient
+	 * @throws URISyntaxException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 
 	private JiraRestClient getJiraClient(String username, String password, HttpServletRequest request)
 			throws URISyntaxException, InterruptedException, ExecutionException {
@@ -450,7 +562,7 @@ public class DailyReportImpl implements DailyReportIntf {
 
 		if (jiraClient == null) {
 			JiraRestClientFactory restClientFactory = new AsynchronousJiraRestClientFactory();
-			final URI jiraServerUri = new URI("http://jira.lexisnexis.fr/");
+			final URI jiraServerUri = new URI(jiraUrl);
 			jiraClient = restClientFactory.createWithBasicHttpAuthentication(jiraServerUri, username, password);
 			request.setAttribute("jiraClient", jiraClient);
 		}
@@ -458,13 +570,20 @@ public class DailyReportImpl implements DailyReportIntf {
 		return jiraClient;
 	}
 
+	/**
+	 * Utility method
+	 * @param ticket
+	 * @param tobeChecked
+	 * @return String
+	 */
+
 	private String validate(Issue ticket, String tobeChecked) {
 
 		switch (tobeChecked) {
 		case "estimated":
 			return (nullCheckObject(ticket.getTimeTracking())
 					&& ticket.getTimeTracking().getOriginalEstimateMinutes() != null)
-					? ticket.getTimeTracking().getOriginalEstimateMinutes().toString() : "";
+							? ticket.getTimeTracking().getOriginalEstimateMinutes().toString() : "";
 
 		case "logged":
 			return (nullCheckObject(ticket.getTimeTracking()) && ticket.getTimeTracking().getTimeSpentMinutes() != null)
@@ -473,7 +592,7 @@ public class DailyReportImpl implements DailyReportIntf {
 		case "remaining":
 			return (nullCheckObject(ticket.getTimeTracking())
 					&& ticket.getTimeTracking().getRemainingEstimateMinutes() != null)
-					? ticket.getTimeTracking().getRemainingEstimateMinutes().toString() : "";
+							? ticket.getTimeTracking().getRemainingEstimateMinutes().toString() : "";
 
 		case "assignee":
 			return (nullCheckObject(ticket.getAssignee()) && nullCheckObject(ticket.getAssignee().getDisplayName()))
@@ -499,6 +618,12 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 	}
 
+	/**
+	 * Utility method
+	 * @param tobeChecked
+	 * @return boolean
+	 */
+
 	private boolean nullCheckObject(Object tobeChecked) {
 		if (tobeChecked != null) {
 			return true;
@@ -507,6 +632,12 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 	}
 
+	/**
+	 * Utility method
+	 * @param tobeChecked
+	 * @return String
+	 */
+
 	private String nullCheckString(String tobeChecked) {
 		if (tobeChecked != null) {
 			return tobeChecked;
@@ -514,6 +645,12 @@ public class DailyReportImpl implements DailyReportIntf {
 			return "";
 		}
 	}
+
+	/**
+	 * Utility method
+	 * @param test
+	 * @return int
+	 */
 
 	private int convertToMinutes(String test) {
 
@@ -546,6 +683,12 @@ public class DailyReportImpl implements DailyReportIntf {
 		}
 		return total;
 	}
+
+	/**
+	 * Utility method
+	 * @param num
+	 * @return String
+	 */
 
 	private String changeDisplayPattern(String num) {
 
@@ -594,15 +737,49 @@ public class DailyReportImpl implements DailyReportIntf {
 		return finalStr;
 	}
 
+	/**
+	 * Utility method
+	 * @param time
+	 * @return String
+	 */
+
 	private String removeTimeZone(String time) {
 		return time.replace(".000+05:30", "").replace("T", " ");
 	}
-	
+
+	/**
+	 * Utility method
+	 * @return String
+	 */
+
 	private String getTodaysDate() {
 		LocalDateTime now = LocalDateTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-mm-dd");
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		return now.format(formatter);
 	}
 
+	public String getJiraUrl() {
+		return jiraUrl;
+	}
+
+	public void setJiraUrl(String jiraUrl) {
+		this.jiraUrl = jiraUrl;
+	}
+
+	public String getQuery() {
+		return query;
+	}
+
+	public void setQuery(String query) {
+		this.query = query;
+	}
+
+	public String getWorkLogQuery() {
+		return workLogQuery;
+	}
+
+	public void setWorkLogQuery(String workLogQuery) {
+		this.workLogQuery = workLogQuery;
+	}
 
 }

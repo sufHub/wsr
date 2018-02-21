@@ -8,11 +8,18 @@ import org.testng.annotations.Test;
 import com.suf.wsr.daily_report.controller.JiraDTO;
 import com.suf.wsr.daily_report.dao.DailyReportDaoImpl;
 
+
+/**
+ * 
+ * @author ShaikUmmerFaruk_D
+ *
+ */
+
 @Test
 public class DailyReportApplicationTest {
 	
-	DailyReportDaoImpl dao = new DailyReportDaoImpl();  
-	
+	DailyReportDaoImpl dao = new DailyReportDaoImpl("jdbc:sqlite:DailyReport");  
+
 	public void insertTest(){
 		
 		List<JiraDTO> list = new ArrayList<JiraDTO>();
